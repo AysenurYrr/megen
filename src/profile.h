@@ -137,4 +137,7 @@ struct profile {
 	size_t certificate_count;
 };
 
+int profile_load(struct profile *profile, const char *path);
+void profile_free(struct profile *profile);
+
 #endif /* MEGEN_PROFILE_H */

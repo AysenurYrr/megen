@@ -5,3 +5,11 @@ phone = "+90 555 555 55 55"
 linkedin = "linkedin.com/in/example"
 github = "github.com/example"
 website = "example.com"
+
+[[education]]
+institution = "Example University"
+department = "Computer Engineering"
+degree = "bachelor"
+start = "2020-09"
+end = "2025-06"
+description = "Focused on systems programming and software engineering."
