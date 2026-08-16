@@ -32,3 +32,50 @@ date = "2023-11"
 [[certificate.links]]
 label = "Credential"
 url = "https://example.com/credentials/systems-programming"
+
+[[volunteer_activity]]
+organization = "Open Source Community"
+role = "Mentor"
+start = "2023-02"
+highlights = [
+    "Mentored new contributors",
+    "Reviewed systems programming projects",
+]
+
+[[volunteer_activity.links]]
+label = "Community"
+url = "https://example.com/community"
+
+[[project]]
+name = "megen"
+summary = "TOML-driven profile and resume generator"
+description = "Parses structured profile data into an owned C model."
+technologies = ["C", "TOML"]
+highlights = [
+    "Implements nested array-of-table parsing",
+    "Uses explicit ownership and cleanup",
+]
+
+[[project.links]]
+label = "Repository"
+url = "https://github.com/example/megen"
+
+[[academic_work]]
+title = "Teaching Assistant"
+organization = "Example University"
+technologies = ["C", "Linux"]
+highlights = [
+    "Led weekly laboratory sessions",
+    "Prepared systems programming exercises",
+]
+
+[[academic_work.periods]]
+start = "2022-09"
+end = "2023-06"
+
+[[academic_work.periods]]
+start = "2024-09"
+
+[[academic_work.links]]
+label = "Course page"
+url = "https://example.com/courses/systems-programming"

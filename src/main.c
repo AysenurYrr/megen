@@ -42,6 +42,21 @@ int main(void)
 		       profile.certificates[i].date.year,
 		       profile.certificates[i].date.month);
 
+	for (i = 0; i < profile.volunteer_activity_count; i++)
+		printf("volunteer: %s, %s\n",
+		       profile.volunteer_activities[i].organization,
+		       profile.volunteer_activities[i].role);
+
+	for (i = 0; i < profile.project_count; i++)
+		printf("project: %s - %s\n", profile.projects[i].name,
+		       profile.projects[i].summary);
+
+	for (i = 0; i < profile.academic_work_count; i++)
+		printf("academic work: %s, %s (%zu periods)\n",
+		       profile.academic_works[i].title,
+		       profile.academic_works[i].organization,
+		       profile.academic_works[i].period_count);
+
 	profile_free(&profile);
 
 	return 0;
