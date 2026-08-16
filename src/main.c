@@ -30,6 +30,18 @@ int main(void)
 			       education->period.end.month);
 	}
 
+	for (i = 0; i < profile.award_count; i++)
+		printf("award: %s, %s (%04u-%02u)\n",
+		       profile.awards[i].title, profile.awards[i].issuer,
+		       profile.awards[i].date.year, profile.awards[i].date.month);
+
+	for (i = 0; i < profile.certificate_count; i++)
+		printf("certificate: %s, %s (%04u-%02u)\n",
+		       profile.certificates[i].title,
+		       profile.certificates[i].issuer,
+		       profile.certificates[i].date.year,
+		       profile.certificates[i].date.month);
+
 	profile_free(&profile);
 
 	return 0;

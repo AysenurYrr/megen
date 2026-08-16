@@ -13,3 +13,22 @@ degree = "bachelor"
 start = "2020-09"
 end = "2025-06"
 description = "Focused on systems programming and software engineering."
+
+[[award]]
+title = "Outstanding Student Award"
+issuer = "Example University"
+date = "2024-06"
+description = "Awarded for academic achievement."
+
+[[award.links]]
+label = "Announcement"
+url = "https://example.com/awards/outstanding-student"
+
+[[certificate]]
+title = "Systems Programming"
+issuer = "Example Institute"
+date = "2023-11"
+
+[[certificate.links]]
+label = "Credential"
+url = "https://example.com/credentials/systems-programming"

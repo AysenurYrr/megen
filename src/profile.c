@@ -31,9 +31,17 @@ static int get_required_string(toml_table_t *table, const char *key,
 	return -1;
 }
 
-static int __attribute__((unused))
-get_string_array(toml_table_t *table, const char *key,
-		 const char ***result, size_t *count)
+static void free_string_array(const char **strings, size_t count)
+{
+	size_t i;
+
+	for (i = 0; i < count; i++)
+		free((void *)strings[i]);
+	free(strings);
+}
+
+static int get_string_array(toml_table_t *table, const char *key,
+			    const char ***result, size_t *count)
 {
 	toml_array_t *array;
 	const char **strings;
@@ -43,6 +51,11 @@ get_string_array(toml_table_t *table, const char *key,
 	*result = NULL;
 	*count = 0;
 	array = toml_table_array(table, key);
+	if (!array && (toml_table_table(table, key) ||
+		       toml_table_unparsed(table, key))) {
+		fprintf(stderr, "megen: '%s' must be an array of strings\n", key);
+		return -1;
+	}
 	if (!array)
 		return 0;
 
@@ -59,9 +72,7 @@ get_string_array(toml_table_t *table, const char *key,
 
 		if (!value.ok) {
 			fprintf(stderr, "megen: '%s' must be an array of strings\n", key);
-			while (i-- > 0)
-				free((void *)strings[i]);
-			free(strings);
+			free_string_array(strings, (size_t)i);
 			return -1;
 		}
 		strings[i] = value.u.s;
@@ -127,6 +138,134 @@ out:
 	return status;
 }
 
+static int parse_date_ranges(toml_table_t *parent, const char *key,
+			     struct date_range **result, size_t *count)
+{
+	toml_array_t *array;
+	struct date_range *ranges;
+	int length;
+	int i;
+
+	*result = NULL;
+	*count = 0;
+	array = toml_table_array(parent, key);
+	if (!array && (toml_table_table(parent, key) ||
+		       toml_table_unparsed(parent, key))) {
+		fprintf(stderr, "megen: '%s' must be an array of tables\n", key);
+		return -1;
+	}
+	if (!array)
+		return 0;
+
+	length = toml_array_len(array);
+	if (length <= 0)
+		return 0;
+
+	ranges = calloc((size_t)length, sizeof(*ranges));
+	if (!ranges)
+		return -1;
+
+	for (i = 0; i < length; i++) {
+		toml_table_t *table = toml_array_table(array, i);
+
+		if (!table) {
+			fprintf(stderr, "megen: %s entry %d must be a table\n",
+				key, i + 1);
+			free(ranges);
+			return -1;
+		}
+		if (parse_date_range(table, &ranges[i])) {
+			free(ranges);
+			return -1;
+		}
+	}
+
+	*result = ranges;
+	*count = (size_t)length;
+	return 0;
+}
+
+static int parse_date_field(toml_table_t *table, const char *key,
+			    struct date *date)
+{
+	const char *value = NULL;
+	int status = -1;
+
+	memset(date, 0, sizeof(*date));
+	if (get_required_string(table, key, &value))
+		return -1;
+
+	if (parse_date(value, date))
+		fprintf(stderr, "megen: invalid date '%s' for '%s' (expected YYYY-MM)\n",
+			value, key);
+	else
+		status = 0;
+
+	free((void *)value);
+	return status;
+}
+
+static void free_links(struct link *links, size_t count)
+{
+	size_t i;
+
+	for (i = 0; i < count; i++) {
+		free((void *)links[i].label);
+		free((void *)links[i].url);
+	}
+	free(links);
+}
+
+static int parse_links(toml_table_t *parent, struct link **result,
+		       size_t *count)
+{
+	toml_array_t *array;
+	struct link *links;
+	int length;
+	int i;
+
+	*result = NULL;
+	*count = 0;
+	array = toml_table_array(parent, "links");
+	if (!array && (toml_table_table(parent, "links") ||
+		       toml_table_unparsed(parent, "links"))) {
+		fprintf(stderr, "megen: 'links' must be an array of tables\n");
+		return -1;
+	}
+	if (!array)
+		return 0;
+
+	length = toml_array_len(array);
+	if (length <= 0)
+		return 0;
+
+	links = calloc((size_t)length, sizeof(*links));
+	if (!links)
+		return -1;
+
+	for (i = 0; i < length; i++) {
+		toml_table_t *table = toml_array_table(array, i);
+
+		if (!table) {
+			fprintf(stderr, "megen: link entry %d must be a table\n", i + 1);
+			goto fail;
+		}
+
+		*count = (size_t)i + 1;
+		if (get_required_string(table, "label", &links[i].label) ||
+		    get_required_string(table, "url", &links[i].url))
+			goto fail;
+	}
+
+	*result = links;
+	return 0;
+
+fail:
+	free_links(links, *count);
+	*count = 0;
+	return -1;
+}
+
 static enum degree parse_degree(const char *str)
 {
 	if (!strcmp(str, "bachelor"))
@@ -184,6 +323,88 @@ static int parse_education(toml_table_t *root, struct profile *profile)
 	return 0;
 }
 
+static int parse_awards(toml_table_t *root, struct profile *profile)
+{
+	toml_array_t *array;
+	int length;
+	int i;
+
+	array = toml_table_array(root, "award");
+	if (!array)
+		return 0;
+
+	length = toml_array_len(array);
+	if (length <= 0)
+		return 0;
+
+	profile->awards = calloc((size_t)length, sizeof(*profile->awards));
+	if (!profile->awards)
+		return -1;
+
+	for (i = 0; i < length; i++) {
+		struct award *award = &profile->awards[i];
+		toml_table_t *table = toml_array_table(array, i);
+
+		if (!table) {
+			fprintf(stderr, "megen: award entry %d must be a table\n", i + 1);
+			return -1;
+		}
+
+		profile->award_count = (size_t)i + 1;
+		if (get_required_string(table, "title", &award->title) ||
+		    get_required_string(table, "issuer", &award->issuer) ||
+		    parse_date_field(table, "date", &award->date) ||
+		    parse_links(table, &award->links, &award->link_count))
+			return -1;
+
+		get_string(table, "description", &award->description);
+	}
+
+	return 0;
+}
+
+static int parse_certificates(toml_table_t *root, struct profile *profile)
+{
+	toml_array_t *array;
+	int length;
+	int i;
+
+	array = toml_table_array(root, "certificate");
+	if (!array)
+		return 0;
+
+	length = toml_array_len(array);
+	if (length <= 0)
+		return 0;
+
+	profile->certificates = calloc((size_t)length, sizeof(*profile->certificates));
+	if (!profile->certificates)
+		return -1;
+
+	for (i = 0; i < length; i++) {
+		struct certificate *certificate = &profile->certificates[i];
+		toml_table_t *table = toml_array_table(array, i);
+
+		if (!table) {
+			fprintf(stderr, "megen: certificate entry %d must be a table\n",
+				i + 1);
+			return -1;
+		}
+
+		profile->certificate_count = (size_t)i + 1;
+		if (get_required_string(table, "title", &certificate->title) ||
+		    get_required_string(table, "issuer", &certificate->issuer) ||
+		    parse_date_field(table, "date", &certificate->date) ||
+		    parse_links(table, &certificate->links,
+				&certificate->link_count))
+			return -1;
+
+		get_string(table, "description", &certificate->description);
+	}
+
+	return 0;
+}
+
 int profile_load(struct profile *profile, const char *path)
 {
 	FILE *file;
@@ -221,7 +442,9 @@ int profile_load(struct profile *profile, const char *path)
 	get_string(personal, "github", &profile->personal.github);
 	get_string(personal, "website", &profile->personal.website);
 
-	if (parse_education(root, profile)) {
+	if (parse_education(root, profile) ||
+	    parse_awards(root, profile) ||
+	    parse_certificates(root, profile)) {
 		toml_free(root);
 		profile_free(profile);
 		return -1;
@@ -249,6 +472,23 @@ void profile_free(struct profile *profile)
 		free((void *)profile->education[i].description);
 	}
 	free(profile->education);
+
+	for (i = 0; i < profile->award_count; i++) {
+		free((void *)profile->awards[i].title);
+		free((void *)profile->awards[i].issuer);
+		free((void *)profile->awards[i].description);
+		free_links(profile->awards[i].links, profile->awards[i].link_count);
+	}
+	free(profile->awards);
+
+	for (i = 0; i < profile->certificate_count; i++) {
+		free((void *)profile->certificates[i].title);
+		free((void *)profile->certificates[i].issuer);
+		free((void *)profile->certificates[i].description);
+		free_links(profile->certificates[i].links,
+			   profile->certificates[i].link_count);
+	}
+	free(profile->certificates);
 
 	memset(profile, 0, sizeof(*profile));
 }
