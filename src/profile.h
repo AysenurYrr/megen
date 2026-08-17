@@ -18,17 +18,17 @@ struct date_range {
 };
 
 struct link {
-	const char *label;
-	const char *url;
+	char *label;
+	char *url;
 };
 
 struct personal_info {
-	const char *name;
-	const char *email;
-	const char *phone;
-	const char *linkedin;
-	const char *github;
-	const char *website;
+	char *name;
+	char *email;
+	char *phone;
+	char *linkedin;
+	char *github;
+	char *website;
 };
 
 enum degree {
@@ -39,26 +39,24 @@ enum degree {
 };
 
 struct education {
-	const char *institution;
-	const char *department;
+	char *institution;
+	char *department;
 	enum degree degree;
-
 	struct date_range period;
-
-	const char *description;
+	char *description;
 };
 
 struct academic_work {
-	const char *title;
-	const char *organization;
+	char *title;
+	char *organization;
 
-	const char **technologies;
+	char **technologies;
 	size_t technology_count;
 
 	struct date_range *periods;
 	size_t period_count;
 
-	const char **highlights;
+	char **highlights;
 	size_t highlight_count;
 
 	struct link *links;
@@ -66,23 +64,23 @@ struct academic_work {
 };
 
 struct award {
-	const char *title;
-	const char *issuer;
+	char *title;
+	char *issuer;
 	struct date date;
 
-	const char *description;
+	char *description;
 
 	struct link *links;
 	size_t link_count;
 };
 
 struct volunteer_activity {
-	const char *organization;
-	const char *role;
+	char *organization;
+	char *role;
 
 	struct date_range period;
 
-	const char **highlights;
+	char **highlights;
 	size_t highlight_count;
 
 	struct link *links;
@@ -90,14 +88,14 @@ struct volunteer_activity {
 };
 
 struct project {
-	const char *name;
-	const char *summary;
-	const char *description;
+	char *name;
+	char *summary;
+	char *description;
 
-	const char **technologies;
+	char **technologies;
 	size_t technology_count;
 
-	const char **highlights;
+	char **highlights;
 	size_t highlight_count;
 
 	struct link *links;
@@ -105,11 +103,11 @@ struct project {
 };
 
 struct certificate {
-	const char *title;
-	const char *issuer;
+	char *title;
+	char *issuer;
 	struct date date;
 
-	const char *description;
+	char *description;
 
 	struct link *links;
 	size_t link_count;
@@ -138,6 +136,7 @@ struct profile {
 };
 
 int profile_load(struct profile *profile, const char *path);
+void profile_dump(const struct profile *profile);
 void profile_free(struct profile *profile);
 
 #endif /* MEGEN_PROFILE_H */

@@ -11,7 +11,7 @@
 /* toml-c.h poisons calloc for its implementation; do not leak that internally. */
 #undef calloc
 
-static int get_string(toml_table_t *table, const char *key, const char **result)
+static int get_string(toml_table_t *table, const char *key, char **result)
 {
 	toml_value_t value;
 
@@ -21,7 +21,7 @@ static int get_string(toml_table_t *table, const char *key, const char **result)
 }
 
 static int get_required_string(toml_table_t *table, const char *key,
-			       const char **result)
+			       char **result)
 {
 	get_string(table, key, result);
 	if (*result)
@@ -31,7 +31,7 @@ static int get_required_string(toml_table_t *table, const char *key,
 	return -1;
 }
 
-static void free_string_array(const char **strings, size_t count)
+static void free_string_array(char **strings, size_t count)
 {
 	size_t i;
 
@@ -41,10 +41,10 @@ static void free_string_array(const char **strings, size_t count)
 }
 
 static int get_string_array(toml_table_t *table, const char *key,
-			    const char ***result, size_t *count)
+			    char ***result, size_t *count)
 {
 	toml_array_t *array;
-	const char **strings;
+	char **strings;
 	int length;
 	int i;
 
@@ -104,8 +104,8 @@ static int parse_date(const char *str, struct date *date)
 
 static int parse_date_range(toml_table_t *table, struct date_range *range)
 {
-	const char *start = NULL;
-	const char *end = NULL;
+	char *start = NULL;
+	char *end = NULL;
 	int status = -1;
 
 	memset(range, 0, sizeof(*range));
@@ -188,7 +188,7 @@ static int parse_date_ranges(toml_table_t *parent, const char *key,
 static int parse_date_field(toml_table_t *table, const char *key,
 			    struct date *date)
 {
-	const char *value = NULL;
+	char *value = NULL;
 	int status = -1;
 
 	memset(date, 0, sizeof(*date));
@@ -298,7 +298,7 @@ static int parse_education(toml_table_t *root, struct profile *profile)
 	for (i = 0; i < length; i++) {
 		struct education *education = &profile->education[i];
 		toml_table_t *table = toml_array_table(array, i);
-		const char *degree = NULL;
+		char *degree = NULL;
 
 		if (!table) {
 			fprintf(stderr, "megen: education entry %d must be a table\n", i + 1);
