@@ -1,4 +1,5 @@
 #include "profile.h"
+#include "latex.h"
 
 int main(void)
 {
@@ -7,7 +8,11 @@ int main(void)
 	if (profile_load(&profile, "profile.toml"))
 		return 1;
 
-	profile_dump(&profile);
+	if (latex_render(&profile, "build/cv.tex")) {
+		profile_free(&profile);
+		return 1;
+	}
+
 	profile_free(&profile);
 
 	return 0;
