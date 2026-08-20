@@ -524,3 +524,26 @@ error:
 	fclose(f);
 	return -1;
 }
+
+int latex_compile_pdf(const char *tex_path)
+{
+	char cmd[512];
+	int ret;
+
+	if (!tex_path)
+		return -1;
+
+	/* Use pdflatex to compile .tex to PDF in the same directory.
+	   -interaction=nonstopmode: don't stop on errors
+	   -halt-on-error: stop on fatal errors
+	 */
+	ret = snprintf(cmd, sizeof(cmd),
+		       "pdflatex -interaction=nonstopmode -halt-on-error "
+		       "-output-directory=$(dirname '%s') '%s' > /dev/null 2>&1",
+		       tex_path, tex_path);
+
+	if (ret < 0 || ret >= (int)sizeof(cmd))
+		return -1;
+
+	return system(cmd) == 0 ? 0 : -1;
+}
