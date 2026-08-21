@@ -74,6 +74,79 @@ static int latex_write_escaped(FILE *f, const char *str)
 	return 0;
 }
 
+static int latex_write_actual_text(FILE *f, const char *str)
+{
+	const unsigned char *p = (const unsigned char *)str;
+	unsigned int codepoint;
+
+	if (fprintf(f, "\\BeginAccSupp{method=hex,unicode,ActualText=") < 0)
+		return -1;
+
+	while (*p) {
+		if (*p < 0x80) {
+			codepoint = *p++;
+		} else if ((*p & 0xe0) == 0xc0 && p[1]) {
+			codepoint = ((unsigned int)(p[0] & 0x1f) << 6) |
+				    (unsigned int)(p[1] & 0x3f);
+			p += 2;
+		} else if ((*p & 0xf0) == 0xe0 && p[1] && p[2]) {
+			codepoint = ((unsigned int)(p[0] & 0x0f) << 12) |
+				    ((unsigned int)(p[1] & 0x3f) << 6) |
+				    (unsigned int)(p[2] & 0x3f);
+			p += 3;
+		} else {
+			return -1;
+		}
+
+		if (fprintf(f, "%04X", codepoint) < 0)
+			return -1;
+	}
+
+	if (fprintf(f, "}") < 0 || latex_write_escaped(f, str) < 0 ||
+	    fprintf(f, "\\EndAccSupp{}") < 0)
+		return -1;
+
+	return 0;
+}
+
+static const char *short_url(const char *url)
+{
+	const char *display = url;
+
+	if (strncmp(display, "https://", 8) == 0)
+		display += 8;
+	else if (strncmp(display, "http://", 7) == 0)
+		display += 7;
+
+	if (strncmp(display, "www.", 4) == 0)
+		display += 4;
+	if (strncmp(display, "tr.linkedin.com/", 16) == 0)
+		display += 3;
+
+	return display;
+}
+
+static int render_url(FILE *f, const char *url)
+{
+	const char *display = short_url(url);
+	const char *scheme = strstr(url, "://") ? "" : "https://";
+
+	if (fprintf(f, "\\href{\\detokenize{%s%s}}{", scheme, url) < 0 ||
+	    latex_write_escaped(f, display) < 0 || fprintf(f, "}") < 0)
+		return -1;
+
+	return 0;
+}
+
+static int render_email(FILE *f, const char *email)
+{
+	if (fprintf(f, "\\href{mailto:\\detokenize{%s}}{", email) < 0 ||
+	    latex_write_escaped(f, email) < 0 || fprintf(f, "}") < 0)
+		return -1;
+
+	return 0;
+}
+
 static int latex_render_date(FILE *f, const struct date date)
 {
 	return fprintf(f, "%s %04u", month_abbr(date.month), date.year);
@@ -109,51 +182,97 @@ static int render_highlights(FILE *f, char *const *highlights, size_t count)
 static int render_personal(FILE *f, const struct personal_info *personal)
 {
 	int first = 1;
+	size_t i;
 
-	/* Large centered name */
-	if (fprintf(f, "{\\LARGE\\bfseries ") < 0)
+	/* Dominant name with a subtle, selectable low-level signature. */
+	if (fprintf(f, "\\noindent{\\fontsize{24}{27}\\selectfont\\bfseries\\color{ink} ") < 0)
 		return -1;
 
-	if (latex_write_escaped(f, personal->name) < 0)
+	if (latex_write_actual_text(f, personal->name) < 0)
 		return -1;
 
-	if (fprintf(f, "}\n\n") < 0)
+	if (fprintf(f,
+		    "}%%\n\\hfill%%\n"
+		    "{\\color{accent}\\raisebox{0.45ex}{\\rule{1.25cm}{0.45pt}}}%%\n"
+		    "\\hspace{0.6em}%%\n"
+		    "{\\ttfamily\\bfseries\\fontsize{11.5}{13}\\selectfont\\color{accent} 0x}\\par\n") < 0)
 		return -1;
+
+	if (personal->title) {
+		if (fprintf(f, "{\\fontsize{12.5}{15}\\selectfont\\bfseries\\color{accent} ") < 0 ||
+		    latex_write_escaped(f, personal->title) < 0 ||
+		    fprintf(f, "}\\\\[4pt]\n") < 0)
+			return -1;
+	}
+
+	if (personal->location) {
+		if (latex_write_actual_text(f, personal->location) < 0)
+			return -1;
+		first = 0;
+	}
 
 	/* Contact info on one line with separators */
 	if (personal->email) {
-		if (latex_write_escaped(f, personal->email) < 0)
+		if (!first && fprintf(f, " \\textcolor{muted}{|} ") < 0)
+			return -1;
+		if (render_email(f, personal->email) < 0)
 			return -1;
 		first = 0;
 	}
 
 	if (personal->github) {
-		if (!first && fprintf(f, " | ") < 0)
+		if (!first && fprintf(f, " \\textcolor{muted}{|} ") < 0)
 			return -1;
-		if (latex_write_escaped(f, personal->github) < 0)
+		if (render_url(f, personal->github) < 0)
 			return -1;
 		first = 0;
 	}
 
 	if (personal->linkedin) {
-		if (!first && fprintf(f, " | ") < 0)
+		if (!first && fprintf(f, " \\textcolor{muted}{|} ") < 0)
 			return -1;
-		if (latex_write_escaped(f, personal->linkedin) < 0)
+		if (render_url(f, personal->linkedin) < 0)
 			return -1;
 		first = 0;
 	}
 
 	if (personal->website) {
-		if (!first && fprintf(f, " | ") < 0)
+		if (!first && fprintf(f, " \\textcolor{muted}{|} ") < 0)
 			return -1;
-		if (latex_write_escaped(f, personal->website) < 0)
+		if (render_url(f, personal->website) < 0)
 			return -1;
 		first = 0;
 	}
 
-	if (!first && fprintf(f, "\n\n") < 0)
+	if (!first && fprintf(f, "\\par\\vspace{4pt}\n") < 0)
 		return -1;
 
+	if (personal->skill_count > 0) {
+		for (i = 0; i < personal->skill_count; i++) {
+			if (latex_write_escaped(f, personal->skills[i]) < 0)
+				return -1;
+			if (i + 1 < personal->skill_count &&
+			    fprintf(f, " \\textcolor{accent}{\\textbullet} ") < 0)
+				return -1;
+		}
+		if (fprintf(f, "\\par\\vspace{3pt}\n") < 0)
+			return -1;
+	}
+
+	if (fprintf(f, "\\vspace{2pt}\n") < 0)
+		return -1;
+
+	return 0;
+}
+
+static int render_summary(FILE *f, const struct personal_info *personal)
+{
+	if (!personal->summary)
+		return 0;
+	if (fprintf(f, "\\cvsection{Summary}\n") < 0 ||
+	    latex_write_escaped(f, personal->summary) < 0 ||
+	    fprintf(f, "\n\n") < 0)
+		return -1;
 	return 0;
 }
 
@@ -164,7 +283,7 @@ static int render_education(FILE *f, const struct profile *profile)
 	if (profile->education_count == 0)
 		return 0;
 
-	if (fprintf(f, "\\section{Education}\n\n") < 0)
+	if (fprintf(f, "\\cvsection{Education}\n") < 0)
 		return -1;
 
 	for (i = 0; i < profile->education_count; i++) {
@@ -220,7 +339,7 @@ static int render_academic_work(FILE *f, const struct profile *profile)
 	if (profile->academic_work_count == 0)
 		return 0;
 
-	if (fprintf(f, "\\section{Academic Work}\n\n") < 0)
+	if (fprintf(f, "\\cvsection{Experience}\n") < 0)
 		return -1;
 
 	for (i = 0; i < profile->academic_work_count; i++) {
@@ -301,7 +420,7 @@ static int render_awards(FILE *f, const struct profile *profile)
 	if (profile->award_count == 0)
 		return 0;
 
-	if (fprintf(f, "\\section{Awards}\n\n") < 0)
+	if (fprintf(f, "\\cvsection{Awards}\n") < 0)
 		return -1;
 
 	for (i = 0; i < profile->award_count; i++) {
@@ -353,7 +472,7 @@ static int render_certificates(FILE *f, const struct profile *profile)
 	if (profile->certificate_count == 0)
 		return 0;
 
-	if (fprintf(f, "\\section{Certificates}\n\n") < 0)
+	if (fprintf(f, "\\cvsection{Certificates}\n") < 0)
 		return -1;
 
 	for (i = 0; i < profile->certificate_count; i++) {
@@ -405,7 +524,7 @@ static int render_volunteer_activities(FILE *f, const struct profile *profile)
 	if (profile->volunteer_activity_count == 0)
 		return 0;
 
-	if (fprintf(f, "\\section{Volunteer Activities}\n\n") < 0)
+	if (fprintf(f, "\\cvsection{Volunteer Activities}\n") < 0)
 		return -1;
 
 	for (i = 0; i < profile->volunteer_activity_count; i++) {
@@ -463,7 +582,7 @@ static int render_projects(FILE *f, const struct profile *profile)
 	if (profile->project_count == 0)
 		return 0;
 
-	if (fprintf(f, "\\section{Projects}\n\n") < 0)
+	if (fprintf(f, "\\cvsection{Projects}\n") < 0)
 		return -1;
 
 	for (i = 0; i < profile->project_count; i++) {
@@ -530,47 +649,59 @@ int latex_render(const struct profile *profile, const char *path)
 	if (!f)
 		return -1;
 
-	if (fprintf(f, "\\documentclass[11pt,a4paper]{article}\n\n") < 0)
+	if (fprintf(f, "\\documentclass[10pt,a4paper]{article}\n\n") < 0)
 		goto error;
 
-	/* Packages for layout and typography */
-	if (fprintf(f, "\\usepackage[a4paper,top=1.4cm,bottom=1.4cm,left=1.6cm,right=1.6cm]{geometry}\n") < 0)
+	/* ATS-safe encoding with explicit, precomposed Turkish mappings. */
+	if (fprintf(f, "\\usepackage[T1]{fontenc}\n\\usepackage[utf8]{inputenc}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\usepackage[scaled=0.95]{helvet}\n\\renewcommand{\\familydefault}{\\sfdefault}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\input{glyphtounicode}\n\\pdfgentounicode=1\n") < 0)
+		goto error;
+	if (fprintf(f,
+		    "\\pdfglyphtounicode{Gbreve}{011E}\n"
+		    "\\pdfglyphtounicode{gbreve}{011F}\n"
+		    "\\pdfglyphtounicode{Idotaccent}{0130}\n"
+		    "\\pdfglyphtounicode{dotlessi}{0131}\n"
+		    "\\pdfglyphtounicode{Scedilla}{015E}\n"
+		    "\\pdfglyphtounicode{scedilla}{015F}\n\n") < 0)
 		goto error;
 
-	if (fprintf(f, "\\usepackage{titlesec}\n") < 0)
+	/* Simple single-column layout; all content remains ordinary PDF text. */
+	if (fprintf(f, "\\usepackage[a4paper,top=1.35cm,bottom=1.35cm,left=1.65cm,right=1.65cm]{geometry}\n") < 0)
 		goto error;
-
-	if (fprintf(f, "\\usepackage{enumitem}\n\n") < 0)
+	if (fprintf(f, "\\usepackage{enumitem}\n\\usepackage{microtype}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\usepackage{accsupp}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\usepackage{xcolor}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\usepackage[hidelinks]{hyperref}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\definecolor{ink}{HTML}{20252B}\n\\definecolor{muted}{HTML}{7A828A}\n\\definecolor{accent}{HTML}{657681}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\color{ink}\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\linespread{1.04}\\selectfont\n\n") < 0)
 		goto error;
 
 	/* Remove page numbers */
 	if (fprintf(f, "\\pagestyle{empty}\n\n") < 0)
 		goto error;
 
-	/* Section formatting: uppercase, bold, with underline and tight spacing */
-	if (fprintf(f, "\\titleformat{\\section}%%\n") < 0)
-		goto error;
-
-	if (fprintf(f, "  {\\large\\bfseries\\uppercase}%%\n") < 0)
-		goto error;
-
-	if (fprintf(f, "  {}%%\n") < 0)
-		goto error;
-
-	if (fprintf(f, "  {0pt}%%\n") < 0)
-		goto error;
-
-	if (fprintf(f, "  {}%%\n") < 0)
-		goto error;
-
-	if (fprintf(f, "  [\\titlerule]%%\n") < 0)
-		goto error;
-
-	if (fprintf(f, "\\titlespacing*{\\section}{0pt}{8pt}{5pt}\n\n") < 0)
+	/* Monospace prefix, sans-serif label, and an inline continuation rule. */
+	if (fprintf(f,
+		    "\\newcommand{\\cvsection}[1]{%%\n"
+		    "  \\vspace{6pt}\\noindent\\color{accent}%%\n"
+		    "  \\makebox[\\linewidth][l]{{\\ttfamily\\bfseries\\fontsize{12.5}{14}\\selectfont //}\\hspace{0.25em}%%\n"
+		    "  {\\sffamily\\bfseries\\large #1}\\hspace{0.75em}%%\n"
+		    "  \\leaders\\hrule height 0.35pt\\hfill}%%\n"
+		    "  \\par\\vspace{3pt}\\color{ink}}\n\n") < 0)
 		goto error;
 
 	/* Bullet point spacing */
-	if (fprintf(f, "\\setlist[itemize]{leftmargin=1.2em,itemsep=1pt,topsep=2pt,parsep=0pt,partopsep=0pt}\n\n") < 0)
+	if (fprintf(f, "\\setlist[itemize]{leftmargin=1.25em,label=\\textbullet,itemsep=1.5pt,topsep=2pt,parsep=0pt,partopsep=0pt}\n\n") < 0)
 		goto error;
 
 	if (fprintf(f, "\\begin{document}\n\n") < 0)
@@ -579,10 +710,16 @@ int latex_render(const struct profile *profile, const char *path)
 	if (render_personal(f, &profile->personal) < 0)
 		goto error;
 
-	if (render_education(f, profile) < 0)
+	if (render_summary(f, &profile->personal) < 0)
 		goto error;
 
 	if (render_academic_work(f, profile) < 0)
+		goto error;
+
+	if (render_education(f, profile) < 0)
+		goto error;
+
+	if (render_projects(f, profile) < 0)
 		goto error;
 
 	if (render_awards(f, profile) < 0)
@@ -592,9 +729,6 @@ int latex_render(const struct profile *profile, const char *path)
 		goto error;
 
 	if (render_volunteer_activities(f, profile) < 0)
-		goto error;
-
-	if (render_projects(f, profile) < 0)
 		goto error;
 
 	if (fprintf(f, "\\end{document}\n") < 0)
@@ -618,7 +752,7 @@ int latex_compile_pdf(const char *tex_path)
 	if (!tex_path)
 		return -1;
 
-	/* Use pdflatex to compile .tex to PDF in the same directory.
+	/* Compile in the same directory with deterministic ToUnicode mappings.
 	   -interaction=nonstopmode: don't stop on errors
 	   -halt-on-error: stop on fatal errors
 	 */

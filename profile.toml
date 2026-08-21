@@ -1,10 +1,12 @@
 [personal]
-name = "Ayse Nur"
-email = "ayse@example.com"
-phone = "+90 555 555 55 55"
-linkedin = "linkedin.com/in/example"
-github = "github.com/example"
-website = "example.com"
+name = "AYŞENUR YÖRÜR"
+title = "Software Engineer — Graphics & Low-Level Systems"
+location = "İstanbul, Türkiye"
+email = "aysenuryorur0@gmail.com"
+linkedin = "https://tr.linkedin.com/in/aysenur-yorur"
+github = "https://github.com/AysenurYrr"
+summary = "Software engineer focused on graphics systems, GPU architecture, and compiler infrastructure, with a low-level, performance-oriented approach to building software."
+skills = ["C / C++", "Graphics Systems", "Low-Level Systems", "GPU Architecture", "Compiler Infrastructure"]
 
 [[education]]
 institution = "Example University"

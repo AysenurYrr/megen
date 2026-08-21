@@ -592,11 +592,20 @@ int profile_load(struct profile *profile, const char *path)
 	}
 
 	get_string(personal, "name", &profile->personal.name);
+	get_string(personal, "title", &profile->personal.title);
+	get_string(personal, "location", &profile->personal.location);
 	get_string(personal, "email", &profile->personal.email);
 	get_string(personal, "phone", &profile->personal.phone);
 	get_string(personal, "linkedin", &profile->personal.linkedin);
 	get_string(personal, "github", &profile->personal.github);
 	get_string(personal, "website", &profile->personal.website);
+	get_string(personal, "summary", &profile->personal.summary);
+	if (get_string_array(personal, "skills", &profile->personal.skills,
+			     &profile->personal.skill_count)) {
+		toml_free(root);
+		profile_free(profile);
+		return -1;
+	}
 
 	if (parse_education(root, profile) ||
 	    parse_awards(root, profile) ||
@@ -619,11 +628,15 @@ void profile_free(struct profile *profile)
 	size_t i;
 
 	free((void *)profile->personal.name);
+	free((void *)profile->personal.title);
+	free((void *)profile->personal.location);
 	free((void *)profile->personal.email);
 	free((void *)profile->personal.phone);
 	free((void *)profile->personal.linkedin);
 	free((void *)profile->personal.github);
 	free((void *)profile->personal.website);
+	free((void *)profile->personal.summary);
+	free_string_array(profile->personal.skills, profile->personal.skill_count);
 
 	for (i = 0; i < profile->education_count; i++) {
 		free((void *)profile->education[i].institution);

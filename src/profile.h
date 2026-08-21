@@ -24,11 +24,16 @@ struct link {
 
 struct personal_info {
 	char *name;
+	char *title;
+	char *location;
 	char *email;
 	char *phone;
 	char *linkedin;
 	char *github;
 	char *website;
+	char *summary;
+	char **skills;
+	size_t skill_count;
 };
 
 enum degree {
