@@ -18,7 +18,7 @@ static const char *month_abbr(unsigned int month)
 	return months[month];
 }
 
-static int latex_write_escaped(FILE *f, const char *str)
+static int latex_write_visual_escaped(FILE *f, const char *str)
 {
 	if (!str)
 		return 0;
@@ -102,11 +102,24 @@ static int latex_write_actual_text(FILE *f, const char *str)
 			return -1;
 	}
 
-	if (fprintf(f, "}") < 0 || latex_write_escaped(f, str) < 0 ||
+	if (fprintf(f, "}") < 0 || latex_write_visual_escaped(f, str) < 0 ||
 	    fprintf(f, "\\EndAccSupp{}") < 0)
 		return -1;
 
 	return 0;
+}
+
+static int latex_write_escaped(FILE *f, const char *str)
+{
+	const unsigned char *p = (const unsigned char *)str;
+
+	if (!str)
+		return 0;
+	for (; *p; p++) {
+		if (*p >= 0x80)
+			return latex_write_actual_text(f, str);
+	}
+	return latex_write_visual_escaped(f, str);
 }
 
 static const char *short_url(const char *url)
@@ -418,6 +431,8 @@ static int render_research_projects(FILE *f, const struct profile *profile)
 	for (i = 0; i < profile->research_project_count; i++) {
 		const struct research_project *project =
 			&profile->research_projects[i];
+		if (fprintf(f, "\\Needspace{12\\baselineskip}\\begin{samepage}\n") < 0)
+			return -1;
 
 		if (fprintf(f, "\\textbf{") < 0 ||
 		    latex_write_escaped(f, project->title) < 0 ||
@@ -471,7 +486,7 @@ static int render_research_projects(FILE *f, const struct profile *profile)
 				      project->highlight_count) < 0)
 			return -1;
 
-		if (fprintf(f, "\\vspace{4pt}\n") < 0)
+		if (fprintf(f, "\\end{samepage}\\vspace{4pt}\n") < 0)
 			return -1;
 	}
 
@@ -702,6 +717,8 @@ int latex_render(const struct profile *profile, const char *path)
 	if (fprintf(f, "\\usepackage[a4paper,top=1.35cm,bottom=1.35cm,left=1.65cm,right=1.65cm]{geometry}\n") < 0)
 		goto error;
 	if (fprintf(f, "\\usepackage{enumitem}\n\\usepackage{microtype}\n") < 0)
+		goto error;
+	if (fprintf(f, "\\usepackage{needspace}\n") < 0)
 		goto error;
 	if (fprintf(f, "\\usepackage{accsupp}\n") < 0)
 		goto error;
