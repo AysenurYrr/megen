@@ -51,15 +51,27 @@ struct education {
 	char *description;
 };
 
-struct academic_work {
+struct experience {
+	char *company;
+	char *title;
+	char *location;
+	char *employment_type;
+	struct date_range period;
+	char **highlights;
+	size_t highlight_count;
+};
+
+struct research_project {
 	char *title;
 	char *organization;
+	char *role;
 
+	char **sponsors;
+	size_t sponsor_count;
 	char **technologies;
 	size_t technology_count;
 
-	struct date_range *periods;
-	size_t period_count;
+	struct date_range period;
 
 	char **highlights;
 	size_t highlight_count;
@@ -73,18 +85,6 @@ struct award {
 	char *issuer;
 	struct date date;
 
-	char *description;
-
-	struct link *links;
-	size_t link_count;
-};
-
-struct volunteer_activity {
-	char *organization;
-	char *role;
-
-	struct date_range period;
-
 	char **highlights;
 	size_t highlight_count;
 
@@ -92,10 +92,20 @@ struct volunteer_activity {
 	size_t link_count;
 };
 
+enum project_category {
+	PROJECT_CATEGORY_LOW_LEVEL,
+	PROJECT_CATEGORY_SYSTEMS,
+	PROJECT_CATEGORY_ROBOTICS,
+	PROJECT_CATEGORY_AI_ML,
+	PROJECT_CATEGORY_WEB,
+	PROJECT_CATEGORY_OTHER,
+};
+
 struct project {
 	char *name;
 	char *summary;
 	char *description;
+	enum project_category category;
 
 	char **technologies;
 	size_t technology_count;
@@ -105,12 +115,13 @@ struct project {
 
 	struct link *links;
 	size_t link_count;
+	bool show_in_cv;
 };
 
 struct certificate {
 	char *title;
 	char *issuer;
-	struct date date;
+	struct date_range period;
 
 	char *description;
 
@@ -124,14 +135,14 @@ struct profile {
 	struct education *education;
 	size_t education_count;
 
-	struct academic_work *academic_works;
-	size_t academic_work_count;
+	struct experience *experiences;
+	size_t experience_count;
+
+	struct research_project *research_projects;
+	size_t research_project_count;
 
 	struct award *awards;
 	size_t award_count;
-
-	struct volunteer_activity *volunteer_activities;
-	size_t volunteer_activity_count;
 
 	struct project *projects;
 	size_t project_count;

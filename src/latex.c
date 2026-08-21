@@ -138,6 +138,17 @@ static int render_url(FILE *f, const char *url)
 	return 0;
 }
 
+static int render_labeled_url(FILE *f, const struct link *link)
+{
+	const char *scheme = strstr(link->url, "://") ? "" : "https://";
+
+	if (fprintf(f, "\\href{\\detokenize{%s%s}}{", scheme, link->url) < 0 ||
+	    latex_write_escaped(f, link->label) < 0 || fprintf(f, "}") < 0)
+		return -1;
+
+	return 0;
+}
+
 static int render_email(FILE *f, const char *email)
 {
 	if (fprintf(f, "\\href{mailto:\\detokenize{%s}}{", email) < 0 ||
@@ -149,7 +160,14 @@ static int render_email(FILE *f, const char *email)
 
 static int latex_render_date(FILE *f, const struct date date)
 {
+	if (date.month == 0)
+		return fprintf(f, "%04u", date.year);
 	return fprintf(f, "%s %04u", month_abbr(date.month), date.year);
+}
+
+static int dates_equal(const struct date left, const struct date right)
+{
+	return left.year == right.year && left.month == right.month;
 }
 
 static int render_highlights(FILE *f, char *const *highlights, size_t count)
@@ -321,7 +339,14 @@ static int render_education(FILE *f, const struct profile *profile)
 			if (latex_write_escaped(f, edu->department) < 0)
 				return -1;
 
-			if (fprintf(f, "\n") < 0)
+			if (fprintf(f, "\\par\n") < 0)
+				return -1;
+		}
+
+		if (edu->description) {
+			if (fprintf(f, "{\\small\\color{muted} ") < 0 ||
+			    latex_write_escaped(f, edu->description) < 0 ||
+			    fprintf(f, "}\\par\n") < 0)
 				return -1;
 		}
 
@@ -332,81 +357,121 @@ static int render_education(FILE *f, const struct profile *profile)
 	return 0;
 }
 
-static int render_academic_work(FILE *f, const struct profile *profile)
+static int render_experiences(FILE *f, const struct profile *profile)
 {
-	size_t i, j;
+	size_t i;
 
-	if (profile->academic_work_count == 0)
+	if (profile->experience_count == 0)
 		return 0;
 
 	if (fprintf(f, "\\cvsection{Experience}\n") < 0)
 		return -1;
 
-	for (i = 0; i < profile->academic_work_count; i++) {
-		const struct academic_work *work = &profile->academic_works[i];
+	for (i = 0; i < profile->experience_count; i++) {
+		const struct experience *experience = &profile->experiences[i];
 
-		/* Title on left, dates on right */
-		if (fprintf(f, "\\textbf{") < 0)
+		if (fprintf(f, "\\textbf{") < 0 ||
+		    latex_write_escaped(f, experience->company) < 0 ||
+		    fprintf(f, "} \\hfill ") < 0 ||
+		    latex_render_date(f, experience->period.start) < 0 ||
+		    fprintf(f, " -- ") < 0)
 			return -1;
 
-		if (latex_write_escaped(f, work->title) < 0)
-			return -1;
-
-		if (fprintf(f, "} \\hfill ") < 0)
-			return -1;
-
-		for (j = 0; j < work->period_count; j++) {
-			if (latex_render_date(f, work->periods[j].start) < 0)
+		if (experience->period.ongoing) {
+			if (fprintf(f, "Present\\\\\n") < 0)
 				return -1;
-
-			if (fprintf(f, " -- ") < 0)
-				return -1;
-
-			if (work->periods[j].ongoing) {
-				if (fprintf(f, "Present") < 0)
-					return -1;
-			} else {
-				if (latex_render_date(f, work->periods[j].end) < 0)
-					return -1;
-			}
-
-			if (j < work->period_count - 1) {
-				if (fprintf(f, "; ") < 0)
-					return -1;
-			}
-		}
-
-		if (fprintf(f, "\\\\\n") < 0)
-			return -1;
-
-		/* Organization on separate line */
-		if (work->organization) {
-			if (latex_write_escaped(f, work->organization) < 0)
-				return -1;
-
-			if (fprintf(f, "\n") < 0)
+		} else {
+			if (latex_render_date(f, experience->period.end) < 0 ||
+			    fprintf(f, "\\\\\n") < 0)
 				return -1;
 		}
 
-		/* Technologies on separate line, not italicized */
-		if (work->technology_count > 0) {
-			for (j = 0; j < work->technology_count; j++) {
-				if (latex_write_escaped(f, work->technologies[j]) < 0)
-					return -1;
+		if (latex_write_escaped(f, experience->title) < 0 ||
+		    fprintf(f, "\\par\n") < 0)
+			return -1;
 
-				if (j < work->technology_count - 1) {
-					if (fprintf(f, ", ") < 0)
+		if (experience->location) {
+			if (fprintf(f, "{\\small\\color{muted} ") < 0 ||
+			    latex_write_escaped(f, experience->location) < 0 ||
+			    fprintf(f, "}\\par\n") < 0)
+				return -1;
+		}
+		if (render_highlights(f, experience->highlights,
+				      experience->highlight_count) < 0 ||
+		    fprintf(f, "\\vspace{4pt}\n") < 0)
+			return -1;
+	}
+
+	return 0;
+}
+
+static int render_research_projects(FILE *f, const struct profile *profile)
+{
+	size_t i, j;
+
+	if (profile->research_project_count == 0)
+		return 0;
+
+	if (fprintf(f, "\\cvsection{Research Experience}\n") < 0)
+		return -1;
+
+	for (i = 0; i < profile->research_project_count; i++) {
+		const struct research_project *project =
+			&profile->research_projects[i];
+
+		if (fprintf(f, "\\textbf{") < 0 ||
+		    latex_write_escaped(f, project->title) < 0 ||
+		    fprintf(f, "}\\par\n") < 0 ||
+		    latex_write_escaped(f, project->organization) < 0 ||
+		    fprintf(f, " \\hfill ") < 0 ||
+		    latex_render_date(f, project->period.start) < 0 ||
+		    fprintf(f, " -- ") < 0)
+			return -1;
+
+		if (project->period.ongoing) {
+			if (fprintf(f, "Present\\par\n") < 0)
+				return -1;
+		} else if (latex_render_date(f, project->period.end) < 0 ||
+			   fprintf(f, "\\par\n") < 0) {
+			return -1;
+		}
+
+		if (project->role &&
+		    (fprintf(f, "{\\small\\color{muted} ") < 0 ||
+		     latex_write_escaped(f, project->role) < 0 ||
+		     fprintf(f, "}\\par\n") < 0))
+			return -1;
+
+		if (project->sponsor_count > 0) {
+			if (fprintf(f, "Supported by ") < 0)
+				return -1;
+			for (j = 0; j < project->sponsor_count; j++) {
+				if (latex_write_escaped(f, project->sponsors[j]) < 0 ||
+				    (j + 1 < project->sponsor_count &&
+				     fprintf(f, ", ") < 0))
+					return -1;
+			}
+			if (fprintf(f, "\\par\n") < 0)
+				return -1;
+		}
+
+		if (project->technology_count > 0) {
+			for (j = 0; j < project->technology_count; j++) {
+				if (latex_write_escaped(f, project->technologies[j]) < 0)
+					return -1;
+				if (j + 1 < project->technology_count &&
+				    fprintf(f, " \\textcolor{accent}{\\textbullet} ") < 0)
 						return -1;
-				}
 			}
-			if (fprintf(f, "\n") < 0)
+			if (fprintf(f, "\\par\n") < 0)
 				return -1;
 		}
 
-		if (render_highlights(f, work->highlights, work->highlight_count) < 0)
+		if (render_highlights(f, project->highlights,
+				      project->highlight_count) < 0)
 			return -1;
 
-		if (fprintf(f, "\n") < 0)
+		if (fprintf(f, "\\vspace{4pt}\n") < 0)
 			return -1;
 	}
 
@@ -415,7 +480,7 @@ static int render_academic_work(FILE *f, const struct profile *profile)
 
 static int render_awards(FILE *f, const struct profile *profile)
 {
-	size_t i;
+	size_t i, j;
 
 	if (profile->award_count == 0)
 		return 0;
@@ -425,6 +490,9 @@ static int render_awards(FILE *f, const struct profile *profile)
 
 	for (i = 0; i < profile->award_count; i++) {
 		const struct award *award = &profile->awards[i];
+
+		if (fprintf(f, "\\begin{samepage}\n") < 0)
+			return -1;
 
 		/* Title on left, date on right */
 		if (fprintf(f, "\\textbf{") < 0)
@@ -445,20 +513,21 @@ static int render_awards(FILE *f, const struct profile *profile)
 		/* Issuer on next line */
 		if (latex_write_escaped(f, award->issuer) < 0)
 			return -1;
-
-		if (fprintf(f, "\n") < 0)
-			return -1;
-
-		/* Description if present */
-		if (award->description) {
-			if (latex_write_escaped(f, award->description) < 0)
-				return -1;
-
-			if (fprintf(f, "\n") < 0)
+		for (j = 0; j < award->link_count; j++) {
+			if (fprintf(f, " \\textcolor{accent}{\\textbullet} ") < 0 ||
+			    render_labeled_url(f, &award->links[j]) < 0)
 				return -1;
 		}
 
 		if (fprintf(f, "\n") < 0)
+			return -1;
+
+		/* CV intentionally shows at most the first award highlight. */
+		if (award->highlight_count > 0 &&
+		    render_highlights(f, award->highlights, 1) < 0)
+			return -1;
+
+		if (fprintf(f, "\\end{samepage}\\vspace{4pt}\n") < 0)
 			return -1;
 	}
 
@@ -467,7 +536,7 @@ static int render_awards(FILE *f, const struct profile *profile)
 
 static int render_certificates(FILE *f, const struct profile *profile)
 {
-	size_t i;
+	size_t i, j;
 
 	if (profile->certificate_count == 0)
 		return 0;
@@ -488,7 +557,11 @@ static int render_certificates(FILE *f, const struct profile *profile)
 		if (fprintf(f, "} \\hfill ") < 0)
 			return -1;
 
-		if (latex_render_date(f, cert->date) < 0)
+		if (latex_render_date(f, cert->period.start) < 0)
+			return -1;
+		if (!dates_equal(cert->period.start, cert->period.end) &&
+		    (fprintf(f, " -- ") < 0 ||
+		     latex_render_date(f, cert->period.end) < 0))
 			return -1;
 
 		if (fprintf(f, "\\\\\n") < 0)
@@ -497,6 +570,12 @@ static int render_certificates(FILE *f, const struct profile *profile)
 		/* Issuer on next line */
 		if (latex_write_escaped(f, cert->issuer) < 0)
 			return -1;
+		for (j = 0; j < cert->link_count; j++) {
+			if (fprintf(f, " \\textcolor{accent}{\\textbullet} ") < 0)
+				return -1;
+			if (render_labeled_url(f, &cert->links[j]) < 0)
+				return -1;
+		}
 
 		if (fprintf(f, "\n") < 0)
 			return -1;
@@ -510,65 +589,7 @@ static int render_certificates(FILE *f, const struct profile *profile)
 				return -1;
 		}
 
-		if (fprintf(f, "\n") < 0)
-			return -1;
-	}
-
-	return 0;
-}
-
-static int render_volunteer_activities(FILE *f, const struct profile *profile)
-{
-	size_t i;
-
-	if (profile->volunteer_activity_count == 0)
-		return 0;
-
-	if (fprintf(f, "\\cvsection{Volunteer Activities}\n") < 0)
-		return -1;
-
-	for (i = 0; i < profile->volunteer_activity_count; i++) {
-		const struct volunteer_activity *activity =
-			&profile->volunteer_activities[i];
-
-		/* Organization on left, dates on right */
-		if (fprintf(f, "\\textbf{") < 0)
-			return -1;
-
-		if (latex_write_escaped(f, activity->organization) < 0)
-			return -1;
-
-		if (fprintf(f, "} \\hfill ") < 0)
-			return -1;
-
-		if (latex_render_date(f, activity->period.start) < 0)
-			return -1;
-
-		if (fprintf(f, " -- ") < 0)
-			return -1;
-
-		if (activity->period.ongoing) {
-			if (fprintf(f, "Present\\\\\n") < 0)
-				return -1;
-		} else {
-			if (latex_render_date(f, activity->period.end) < 0)
-				return -1;
-
-			if (fprintf(f, "\\\\\n") < 0)
-				return -1;
-		}
-
-		/* Role on separate line */
-		if (latex_write_escaped(f, activity->role) < 0)
-			return -1;
-
-		if (fprintf(f, "\n") < 0)
-			return -1;
-
-		if (render_highlights(f, activity->highlights, activity->highlight_count) < 0)
-			return -1;
-
-		if (fprintf(f, "\n") < 0)
+		if (fprintf(f, "\\par\\vspace{3pt}\n") < 0)
 			return -1;
 	}
 
@@ -578,8 +599,15 @@ static int render_volunteer_activities(FILE *f, const struct profile *profile)
 static int render_projects(FILE *f, const struct profile *profile)
 {
 	size_t i, j;
+	int has_visible_project = 0;
 
-	if (profile->project_count == 0)
+	for (i = 0; i < profile->project_count; i++) {
+		if (profile->projects[i].show_in_cv) {
+			has_visible_project = 1;
+			break;
+		}
+	}
+	if (!has_visible_project)
 		return 0;
 
 	if (fprintf(f, "\\cvsection{Projects}\n") < 0)
@@ -587,6 +615,8 @@ static int render_projects(FILE *f, const struct profile *profile)
 
 	for (i = 0; i < profile->project_count; i++) {
 		const struct project *proj = &profile->projects[i];
+		if (!proj->show_in_cv)
+			continue;
 
 		/* Project name on left, technologies on right */
 		if (fprintf(f, "\\textbf{") < 0)
@@ -713,22 +743,22 @@ int latex_render(const struct profile *profile, const char *path)
 	if (render_summary(f, &profile->personal) < 0)
 		goto error;
 
-	if (render_academic_work(f, profile) < 0)
-		goto error;
-
 	if (render_education(f, profile) < 0)
 		goto error;
 
+	if (render_experiences(f, profile) < 0)
+		goto error;
+
 	if (render_projects(f, profile) < 0)
+		goto error;
+
+	if (render_research_projects(f, profile) < 0)
 		goto error;
 
 	if (render_awards(f, profile) < 0)
 		goto error;
 
 	if (render_certificates(f, profile) < 0)
-		goto error;
-
-	if (render_volunteer_activities(f, profile) < 0)
 		goto error;
 
 	if (fprintf(f, "\\end{document}\n") < 0)

@@ -138,55 +138,21 @@ out:
 	return status;
 }
 
-static int parse_date_ranges(toml_table_t *parent, const char *key,
-			     struct date_range **result, size_t *count)
+static int parse_year_or_date(const char *value, struct date *date)
 {
-	toml_array_t *array;
-	struct date_range *ranges;
-	int length;
-	int i;
-
-	*result = NULL;
-	*count = 0;
-	array = toml_table_array(parent, key);
-	if (!array && (toml_table_table(parent, key) ||
-		       toml_table_unparsed(parent, key))) {
-		fprintf(stderr, "megen: '%s' must be an array of tables\n", key);
-		return -1;
+	memset(date, 0, sizeof(*date));
+	if (strlen(value) == 4 && isdigit((unsigned char)value[0]) &&
+	    isdigit((unsigned char)value[1]) &&
+	    isdigit((unsigned char)value[2]) &&
+	    isdigit((unsigned char)value[3])) {
+		date->year = (unsigned int)strtoul(value, NULL, 10);
+		return date->year > 0 ? 0 : -1;
 	}
-	if (!array)
-		return 0;
-
-	length = toml_array_len(array);
-	if (length <= 0)
-		return 0;
-
-	ranges = calloc((size_t)length, sizeof(*ranges));
-	if (!ranges)
-		return -1;
-
-	for (i = 0; i < length; i++) {
-		toml_table_t *table = toml_array_table(array, i);
-
-		if (!table) {
-			fprintf(stderr, "megen: %s entry %d must be a table\n",
-				key, i + 1);
-			free(ranges);
-			return -1;
-		}
-		if (parse_date_range(table, &ranges[i])) {
-			free(ranges);
-			return -1;
-		}
-	}
-
-	*result = ranges;
-	*count = (size_t)length;
-	return 0;
+	return parse_date(value, date);
 }
 
-static int parse_date_field(toml_table_t *table, const char *key,
-			    struct date *date)
+static int parse_year_or_date_field(toml_table_t *table, const char *key,
+				    struct date *date)
 {
 	char *value = NULL;
 	int status = -1;
@@ -195,13 +161,102 @@ static int parse_date_field(toml_table_t *table, const char *key,
 	if (get_required_string(table, key, &value))
 		return -1;
 
-	if (parse_date(value, date))
-		fprintf(stderr, "megen: invalid date '%s' for '%s' (expected YYYY-MM)\n",
-			value, key);
-	else
+	if (parse_year_or_date(value, date) == 0) {
 		status = 0;
+	} else {
+		fprintf(stderr,
+			"megen: invalid date '%s' for '%s' (expected YYYY or YYYY-MM)\n",
+			value, key);
+	}
 
 	free((void *)value);
+	return status;
+}
+
+static int parse_certificate_period(toml_table_t *table,
+				    struct date_range *period)
+{
+	char *date = NULL;
+	char *start = NULL;
+	char *end = NULL;
+	int status = -1;
+
+	memset(period, 0, sizeof(*period));
+	get_string(table, "date", &date);
+	get_string(table, "start", &start);
+	get_string(table, "end", &end);
+
+	if (date) {
+		if (start || end) {
+			fprintf(stderr,
+				"megen: certificate must use either 'date' or 'start'/'end'\n");
+			goto out;
+		}
+		if (parse_year_or_date(date, &period->start) == 0) {
+			period->end = period->start;
+			status = 0;
+		} else {
+			fprintf(stderr,
+				"megen: invalid certificate date '%s' (expected YYYY or YYYY-MM)\n",
+				date);
+		}
+		goto out;
+	}
+
+	if (!start || !end) {
+		fprintf(stderr,
+			"megen: certificate requires 'date' or both 'start' and 'end'\n");
+		goto out;
+	}
+	if (parse_year_or_date(start, &period->start) != 0 ||
+	    parse_year_or_date(end, &period->end) != 0) {
+		fprintf(stderr,
+			"megen: invalid certificate period (expected YYYY or YYYY-MM)\n");
+		goto out;
+	}
+
+	status = 0;
+out:
+	free((void *)date);
+	free((void *)start);
+	free((void *)end);
+	return status;
+}
+
+static int parse_flexible_date_range(toml_table_t *table,
+				     struct date_range *range)
+{
+	char *start = NULL;
+	char *end = NULL;
+	int status = -1;
+
+	memset(range, 0, sizeof(*range));
+	if (get_required_string(table, "start", &start))
+		return -1;
+	get_string(table, "end", &end);
+
+	if (parse_year_or_date(start, &range->start) != 0) {
+		fprintf(stderr,
+			"megen: invalid research start '%s' (expected YYYY or YYYY-MM)\n",
+			start);
+		goto out;
+	}
+	if (!end) {
+		range->ongoing = true;
+		status = 0;
+		goto out;
+	}
+	if (parse_year_or_date(end, &range->end) != 0) {
+		fprintf(stderr,
+			"megen: invalid research end '%s' (expected YYYY or YYYY-MM)\n",
+			end);
+		goto out;
+	}
+
+	status = 0;
+out:
+	free((void *)start);
+	free((void *)end);
 	return status;
 }
 
@@ -275,6 +330,28 @@ static enum degree parse_degree(const char *str)
 	if (!strcmp(str, "phd"))
 		return DEGREE_PHD;
 	return DEGREE_OTHER;
+}
+
+static int parse_project_category(const char *value,
+				  enum project_category *category)
+{
+	if (!strcmp(value, "low_level"))
+		*category = PROJECT_CATEGORY_LOW_LEVEL;
+	else if (!strcmp(value, "systems"))
+		*category = PROJECT_CATEGORY_SYSTEMS;
+	else if (!strcmp(value, "robotics"))
+		*category = PROJECT_CATEGORY_ROBOTICS;
+	else if (!strcmp(value, "ai_ml"))
+		*category = PROJECT_CATEGORY_AI_ML;
+	else if (!strcmp(value, "web"))
+		*category = PROJECT_CATEGORY_WEB;
+	else if (!strcmp(value, "other"))
+		*category = PROJECT_CATEGORY_OTHER;
+	else {
+		fprintf(stderr, "megen: unknown project category '%s'\n", value);
+		return -1;
+	}
+	return 0;
 }
 
 static int parse_education(toml_table_t *root, struct profile *profile)
@@ -353,11 +430,60 @@ static int parse_awards(toml_table_t *root, struct profile *profile)
 		profile->award_count = (size_t)i + 1;
 		if (get_required_string(table, "title", &award->title) ||
 		    get_required_string(table, "issuer", &award->issuer) ||
-		    parse_date_field(table, "date", &award->date) ||
+		    parse_year_or_date_field(table, "date", &award->date) ||
+		    get_string_array(table, "highlights", &award->highlights,
+				     &award->highlight_count) ||
 		    parse_links(table, &award->links, &award->link_count))
 			return -1;
+	}
 
-		get_string(table, "description", &award->description);
+	return 0;
+}
+
+static int parse_experiences(toml_table_t *root, struct profile *profile)
+{
+	toml_array_t *array;
+	int length;
+	int i;
+
+	array = toml_table_array(root, "experience");
+	if (!array && (toml_table_table(root, "experience") ||
+		       toml_table_unparsed(root, "experience"))) {
+		fprintf(stderr, "megen: 'experience' must be an array of tables\n");
+		return -1;
+	}
+	if (!array)
+		return 0;
+
+	length = toml_array_len(array);
+	if (length <= 0)
+		return 0;
+
+	profile->experiences = calloc((size_t)length,
+				      sizeof(*profile->experiences));
+	if (!profile->experiences)
+		return -1;
+
+	for (i = 0; i < length; i++) {
+		struct experience *experience = &profile->experiences[i];
+		toml_table_t *table = toml_array_table(array, i);
+
+		if (!table) {
+			fprintf(stderr, "megen: experience entry %d must be a table\n",
+				i + 1);
+			return -1;
+		}
+
+		profile->experience_count = (size_t)i + 1;
+		if (get_required_string(table, "company", &experience->company) ||
+		    get_required_string(table, "title", &experience->title) ||
+		    parse_date_range(table, &experience->period) ||
+		    get_string_array(table, "highlights", &experience->highlights,
+				     &experience->highlight_count))
+			return -1;
+
+		get_string(table, "location", &experience->location);
+		get_string(table, "employment_type", &experience->employment_type);
 	}
 
 	return 0;
@@ -394,62 +520,12 @@ static int parse_certificates(toml_table_t *root, struct profile *profile)
 		profile->certificate_count = (size_t)i + 1;
 		if (get_required_string(table, "title", &certificate->title) ||
 		    get_required_string(table, "issuer", &certificate->issuer) ||
-		    parse_date_field(table, "date", &certificate->date) ||
+		    parse_certificate_period(table, &certificate->period) ||
 		    parse_links(table, &certificate->links,
 				&certificate->link_count))
 			return -1;
 
 		get_string(table, "description", &certificate->description);
-	}
-
-	return 0;
-}
-
-static int parse_volunteer_activities(toml_table_t *root,
-				      struct profile *profile)
-{
-	toml_array_t *array;
-	int length;
-	int i;
-
-	array = toml_table_array(root, "volunteer_activity");
-	if (!array && (toml_table_table(root, "volunteer_activity") ||
-		       toml_table_unparsed(root, "volunteer_activity"))) {
-		fprintf(stderr, "megen: 'volunteer_activity' must be an array of tables\n");
-		return -1;
-	}
-	if (!array)
-		return 0;
-
-	length = toml_array_len(array);
-	if (length <= 0)
-		return 0;
-
-	profile->volunteer_activities =
-		calloc((size_t)length, sizeof(*profile->volunteer_activities));
-	if (!profile->volunteer_activities)
-		return -1;
-
-	for (i = 0; i < length; i++) {
-		struct volunteer_activity *activity =
-			&profile->volunteer_activities[i];
-		toml_table_t *table = toml_array_table(array, i);
-
-		if (!table) {
-			fprintf(stderr,
-				"megen: volunteer_activity entry %d must be a table\n",
-				i + 1);
-			return -1;
-		}
-
-		profile->volunteer_activity_count = (size_t)i + 1;
-		if (get_required_string(table, "organization", &activity->organization) ||
-		    get_required_string(table, "role", &activity->role) ||
-		    parse_date_range(table, &activity->period) ||
-		    get_string_array(table, "highlights", &activity->highlights,
-				     &activity->highlight_count) ||
-		    parse_links(table, &activity->links, &activity->link_count))
-			return -1;
 	}
 
 	return 0;
@@ -481,6 +557,8 @@ static int parse_projects(toml_table_t *root, struct profile *profile)
 	for (i = 0; i < length; i++) {
 		struct project *project = &profile->projects[i];
 		toml_table_t *table = toml_array_table(array, i);
+		toml_value_t show_in_cv;
+		char *category = NULL;
 
 		if (!table) {
 			fprintf(stderr, "megen: project entry %d must be a table\n", i + 1);
@@ -489,9 +567,23 @@ static int parse_projects(toml_table_t *root, struct profile *profile)
 
 		profile->project_count = (size_t)i + 1;
 		if (get_required_string(table, "name", &project->name) ||
-		    get_required_string(table, "summary", &project->summary))
+		    get_required_string(table, "category", &category) ||
+		    parse_project_category(category, &project->category)) {
+			free((void *)category);
 			return -1;
+		}
+		free((void *)category);
 
+		show_in_cv = toml_table_bool(table, "show_in_cv");
+		if (!show_in_cv.ok) {
+			fprintf(stderr,
+				"megen: project entry %d requires boolean 'show_in_cv'\n",
+				i + 1);
+			return -1;
+		}
+		project->show_in_cv = show_in_cv.u.b;
+
+		get_string(table, "summary", &project->summary);
 		get_string(table, "description", &project->description);
 		if (get_string_array(table, "technologies", &project->technologies,
 				     &project->technology_count) ||
@@ -504,16 +596,16 @@ static int parse_projects(toml_table_t *root, struct profile *profile)
 	return 0;
 }
 
-static int parse_academic_works(toml_table_t *root, struct profile *profile)
+static int parse_research_projects(toml_table_t *root, struct profile *profile)
 {
 	toml_array_t *array;
 	int length;
 	int i;
 
-	array = toml_table_array(root, "academic_work");
-	if (!array && (toml_table_table(root, "academic_work") ||
-		       toml_table_unparsed(root, "academic_work"))) {
-		fprintf(stderr, "megen: 'academic_work' must be an array of tables\n");
+	array = toml_table_array(root, "research_project");
+	if (!array && (toml_table_table(root, "research_project") ||
+		       toml_table_unparsed(root, "research_project"))) {
+		fprintf(stderr, "megen: 'research_project' must be an array of tables\n");
 		return -1;
 	}
 	if (!array)
@@ -523,39 +615,35 @@ static int parse_academic_works(toml_table_t *root, struct profile *profile)
 	if (length <= 0)
 		return 0;
 
-	profile->academic_works =
-		calloc((size_t)length, sizeof(*profile->academic_works));
-	if (!profile->academic_works)
+	profile->research_projects =
+		calloc((size_t)length, sizeof(*profile->research_projects));
+	if (!profile->research_projects)
 		return -1;
 
 	for (i = 0; i < length; i++) {
-		struct academic_work *work = &profile->academic_works[i];
+		struct research_project *project = &profile->research_projects[i];
 		toml_table_t *table = toml_array_table(array, i);
 
 		if (!table) {
-			fprintf(stderr, "megen: academic_work entry %d must be a table\n",
+			fprintf(stderr, "megen: research_project entry %d must be a table\n",
 				i + 1);
 			return -1;
 		}
 
-		profile->academic_work_count = (size_t)i + 1;
-		if (get_required_string(table, "title", &work->title) ||
-		    get_required_string(table, "organization", &work->organization) ||
-		    get_string_array(table, "technologies", &work->technologies,
-				     &work->technology_count) ||
-		    get_string_array(table, "highlights", &work->highlights,
-				     &work->highlight_count) ||
-		    parse_links(table, &work->links, &work->link_count) ||
-		    parse_date_ranges(table, "periods", &work->periods,
-				      &work->period_count))
+		profile->research_project_count = (size_t)i + 1;
+		if (get_required_string(table, "title", &project->title) ||
+		    get_required_string(table, "organization", &project->organization) ||
+		    parse_flexible_date_range(table, &project->period) ||
+		    get_string_array(table, "sponsors", &project->sponsors,
+				     &project->sponsor_count) ||
+		    get_string_array(table, "technologies", &project->technologies,
+				     &project->technology_count) ||
+		    get_string_array(table, "highlights", &project->highlights,
+				     &project->highlight_count) ||
+		    parse_links(table, &project->links, &project->link_count))
 			return -1;
 
-		if (work->period_count == 0) {
-			fprintf(stderr,
-				"megen: academic_work entry %d requires at least one period\n",
-				 i + 1);
-			return -1;
-		}
+		get_string(table, "role", &project->role);
 	}
 
 	return 0;
@@ -608,11 +696,11 @@ int profile_load(struct profile *profile, const char *path)
 	}
 
 	if (parse_education(root, profile) ||
+	    parse_experiences(root, profile) ||
 	    parse_awards(root, profile) ||
 	    parse_certificates(root, profile) ||
-	    parse_volunteer_activities(root, profile) ||
 	    parse_projects(root, profile) ||
-	    parse_academic_works(root, profile)) {
+	    parse_research_projects(root, profile)) {
 		toml_free(root);
 		profile_free(profile);
 		return -1;
@@ -645,10 +733,23 @@ void profile_free(struct profile *profile)
 	}
 	free(profile->education);
 
+	for (i = 0; i < profile->experience_count; i++) {
+		struct experience *experience = &profile->experiences[i];
+
+		free((void *)experience->company);
+		free((void *)experience->title);
+		free((void *)experience->location);
+		free((void *)experience->employment_type);
+		free_string_array(experience->highlights,
+				  experience->highlight_count);
+	}
+	free(profile->experiences);
+
 	for (i = 0; i < profile->award_count; i++) {
 		free((void *)profile->awards[i].title);
 		free((void *)profile->awards[i].issuer);
-		free((void *)profile->awards[i].description);
+		free_string_array(profile->awards[i].highlights,
+				  profile->awards[i].highlight_count);
 		free_links(profile->awards[i].links, profile->awards[i].link_count);
 	}
 	free(profile->awards);
@@ -662,17 +763,6 @@ void profile_free(struct profile *profile)
 	}
 	free(profile->certificates);
 
-	for (i = 0; i < profile->volunteer_activity_count; i++) {
-		struct volunteer_activity *activity =
-			&profile->volunteer_activities[i];
-
-		free((void *)activity->organization);
-		free((void *)activity->role);
-		free_string_array(activity->highlights, activity->highlight_count);
-		free_links(activity->links, activity->link_count);
-	}
-	free(profile->volunteer_activities);
-
 	for (i = 0; i < profile->project_count; i++) {
 		struct project *project = &profile->projects[i];
 
@@ -685,17 +775,18 @@ void profile_free(struct profile *profile)
 	}
 	free(profile->projects);
 
-	for (i = 0; i < profile->academic_work_count; i++) {
-		struct academic_work *work = &profile->academic_works[i];
+	for (i = 0; i < profile->research_project_count; i++) {
+		struct research_project *project = &profile->research_projects[i];
 
-		free((void *)work->title);
-		free((void *)work->organization);
-		free_string_array(work->technologies, work->technology_count);
-		free(work->periods);
-		free_string_array(work->highlights, work->highlight_count);
-		free_links(work->links, work->link_count);
+		free((void *)project->title);
+		free((void *)project->organization);
+		free((void *)project->role);
+		free_string_array(project->sponsors, project->sponsor_count);
+		free_string_array(project->technologies, project->technology_count);
+		free_string_array(project->highlights, project->highlight_count);
+		free_links(project->links, project->link_count);
 	}
-	free(profile->academic_works);
+	free(profile->research_projects);
 
 	memset(profile, 0, sizeof(*profile));
 }

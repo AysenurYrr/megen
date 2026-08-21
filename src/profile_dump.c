@@ -18,6 +18,19 @@ static const char *degree_name(enum degree degree)
 	return "unknown";
 }
 
+static const char *project_category_name(enum project_category category)
+{
+	switch (category) {
+	case PROJECT_CATEGORY_LOW_LEVEL: return "low_level";
+	case PROJECT_CATEGORY_SYSTEMS: return "systems";
+	case PROJECT_CATEGORY_ROBOTICS: return "robotics";
+	case PROJECT_CATEGORY_AI_ML: return "ai_ml";
+	case PROJECT_CATEGORY_WEB: return "web";
+	case PROJECT_CATEGORY_OTHER: return "other";
+	}
+	return "unknown";
+}
+
 static void dump_string(const char *label, const char *value)
 {
 	printf("  %s: %s\n", label, value ? value : "(none)");
@@ -56,7 +69,10 @@ static void dump_links(const struct link *links, size_t count)
 
 static void dump_date(const struct date *date)
 {
-	printf("%04u-%02u", date->year, date->month);
+	if (date->month == 0)
+		printf("%04u", date->year);
+	else
+		printf("%04u-%02u", date->year, date->month);
 }
 
 static void dump_date_range(const struct date_range *range)
@@ -72,7 +88,6 @@ static void dump_date_range(const struct date_range *range)
 void profile_dump(const struct profile *profile)
 {
 	size_t i;
-	size_t j;
 
 	if (!profile)
 		return;
@@ -99,6 +114,22 @@ void profile_dump(const struct profile *profile)
 		dump_string("description", education->description);
 	}
 
+	for (i = 0; i < profile->experience_count; i++) {
+		const struct experience *experience = &profile->experiences[i];
+
+		putchar('\n');
+		printf("experience[%zu]:\n", i);
+		dump_string("company", experience->company);
+		dump_string("title", experience->title);
+		dump_string("location", experience->location);
+		dump_string("employment_type", experience->employment_type);
+		printf("  period: ");
+		dump_date_range(&experience->period);
+		putchar('\n');
+		dump_string_array("highlights", experience->highlights,
+				  experience->highlight_count);
+	}
+
 	for (i = 0; i < profile->award_count; i++) {
 		const struct award *award = &profile->awards[i];
 
@@ -109,7 +140,8 @@ void profile_dump(const struct profile *profile)
 		printf("  date: ");
 		dump_date(&award->date);
 		putchar('\n');
-		dump_string("description", award->description);
+		dump_string_array("highlights", award->highlights,
+				  award->highlight_count);
 		dump_links(award->links, award->link_count);
 	}
 
@@ -120,27 +152,11 @@ void profile_dump(const struct profile *profile)
 		printf("certificate[%zu]:\n", i);
 		dump_string("title", certificate->title);
 		dump_string("issuer", certificate->issuer);
-		printf("  date: ");
-		dump_date(&certificate->date);
+		printf("  period: ");
+		dump_date_range(&certificate->period);
 		putchar('\n');
 		dump_string("description", certificate->description);
 		dump_links(certificate->links, certificate->link_count);
-	}
-
-	for (i = 0; i < profile->volunteer_activity_count; i++) {
-		const struct volunteer_activity *activity =
-			&profile->volunteer_activities[i];
-
-		putchar('\n');
-		printf("volunteer_activity[%zu]:\n", i);
-		dump_string("organization", activity->organization);
-		dump_string("role", activity->role);
-		printf("  period: ");
-		dump_date_range(&activity->period);
-		putchar('\n');
-		dump_string_array("highlights", activity->highlights,
-				  activity->highlight_count);
-		dump_links(activity->links, activity->link_count);
 	}
 
 	for (i = 0; i < profile->project_count; i++) {
@@ -151,6 +167,8 @@ void profile_dump(const struct profile *profile)
 		dump_string("name", project->name);
 		dump_string("summary", project->summary);
 		dump_string("description", project->description);
+		printf("  category: %s\n", project_category_name(project->category));
+		printf("  show_in_cv: %s\n", project->show_in_cv ? "true" : "false");
 		dump_string_array("technologies", project->technologies,
 				  project->technology_count);
 		dump_string_array("highlights", project->highlights,
@@ -158,27 +176,23 @@ void profile_dump(const struct profile *profile)
 		dump_links(project->links, project->link_count);
 	}
 
-	for (i = 0; i < profile->academic_work_count; i++) {
-		const struct academic_work *work = &profile->academic_works[i];
+	for (i = 0; i < profile->research_project_count; i++) {
+		const struct research_project *project = &profile->research_projects[i];
 
 		putchar('\n');
-		printf("academic_work[%zu]:\n", i);
-		dump_string("title", work->title);
-		dump_string("organization", work->organization);
-		dump_string_array("technologies", work->technologies,
-				  work->technology_count);
-		if (work->periods && work->period_count > 0) {
-			puts("  periods:");
-			for (j = 0; j < work->period_count; j++) {
-				printf("    - ");
-				dump_date_range(&work->periods[j]);
-				putchar('\n');
-			}
-		} else {
-			puts("  periods: []");
-		}
-		dump_string_array("highlights", work->highlights,
-				  work->highlight_count);
-		dump_links(work->links, work->link_count);
+		printf("research_project[%zu]:\n", i);
+		dump_string("title", project->title);
+		dump_string("organization", project->organization);
+		dump_string("role", project->role);
+		dump_string_array("sponsors", project->sponsors,
+				  project->sponsor_count);
+		dump_string_array("technologies", project->technologies,
+				  project->technology_count);
+		printf("  period: ");
+		dump_date_range(&project->period);
+		putchar('\n');
+		dump_string_array("highlights", project->highlights,
+				  project->highlight_count);
+		dump_links(project->links, project->link_count);
 	}
 }

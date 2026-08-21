@@ -1,83 +1,245 @@
 [personal]
 name = "AYŞENUR YÖRÜR"
-title = "Software Engineer — Graphics & Low-Level Systems"
+title = "Computer Engineer — Graphics & Low-Level Systems"
 location = "İstanbul, Türkiye"
 email = "aysenuryorur0@gmail.com"
 linkedin = "https://tr.linkedin.com/in/aysenur-yorur"
 github = "https://github.com/AysenurYrr"
-summary = "Software engineer focused on graphics systems, GPU architecture, and compiler infrastructure, with a low-level, performance-oriented approach to building software."
+summary = "Computer engineer focused on graphics systems, GPU architecture, and compiler infrastructure, with a low-level, performance-oriented approach to building software."
 skills = ["C / C++", "Graphics Systems", "Low-Level Systems", "GPU Architecture", "Compiler Infrastructure"]
 
+[[experience]]
+company = "HAVELSAN"
+title = "Software Engineer"
+employment_type = "Full-time"
+start = "2025-11"
+highlights = [
+    "Developing an offline shader compiler supporting little-endian and big-endian architectures and GPU-specific ISA generation.",
+    "Refactoring and improving C code for safety-critical graphics software in accordance with DO-178C requirements.",
+    "Supporting shader compiler testing, debugging, and code quality improvement activities."
+]
+
+[[experience]]
+company = "HAVELSAN"
+title = "Candidate Engineer"
+employment_type = "Part-time"
+start = "2025-04"
+end = "2025-10"
+
 [[education]]
-institution = "Example University"
+institution = "Istanbul Medeniyet University"
 department = "Computer Engineering"
 degree = "bachelor"
-start = "2020-09"
-end = "2025-06"
-description = "Focused on systems programming and software engineering."
+start = "2021-09"
+end = "2025-08"
+description = "GPA: 3.85/4.00. Ranked 1st in the Faculty of Engineering and Natural Sciences."
 
 [[award]]
-title = "Outstanding Student Award"
-issuer = "Example University"
-date = "2024-06"
-description = "Awarded for academic achievement."
+title = "3rd Place — VRX 2023 Virtual RobotX Competition"
+issuer = "RobotX"
+date = "2023"
+highlights = [
+    "Developed autonomous navigation components in Python for a ROS 2 and Gazebo-based unmanned surface vehicle, including path planning and obstacle avoidance.",
+]
 
 [[award.links]]
-label = "Announcement"
-url = "https://example.com/awards/outstanding-student"
+label = "Certificate"
+url = "https://drive.google.com/file/d/1EdsEu69vlwkXDOf2DJz1Pe6LyVpm_LGM/view"
+
+[[award]]
+title = "Performance Award — International UAV Competition"
+issuer = "TEKNOFEST"
+date = "2023"
+
+highlights = [
+    "Led the team as Team Captain and developed UAV flight and simulation software using Python, ROS, MAVROS, and Gazebo for an autonomous target tracking and capture system."
+]
+
+[[award.links]]
+label = "Certificate"
+url = "https://drive.google.com/file/d/1FtwzgZz_wlXY4Fdh4lXFrdEze8stdcym/view"
+
+[[award.links]]
+label = "Project"
+url = "https://fieldroboticslab.github.io/comp_RW.html##UAV2022"
 
 [[certificate]]
-title = "Systems Programming"
-issuer = "Example Institute"
-date = "2023-11"
+title = "C Programming For Beginners"
+issuer = "Huw Collingbourne"
+date = "2022-11"
 
 [[certificate.links]]
 label = "Credential"
-url = "https://example.com/credentials/systems-programming"
+url = "https://www.udemy.com/certificate/UC-152e0104-cd60-4efb-a510-a960e4ba52a9/"
 
-[[volunteer_activity]]
-organization = "Open Source Community"
-role = "Mentor"
-start = "2023-02"
-highlights = [
-    "Mentored new contributors",
-    "Reviewed systems programming projects",
-]
+[[certificate]]
+title = "Plepa C++ Course"
+issuer = "Necati Ergin"
+start = "2023"
+end = "2024"
 
-[[volunteer_activity.links]]
-label = "Community"
-url = "https://example.com/community"
+[[certificate.links]]
+label = "Credential"
+url = "https://plepa.com/certs/65717437694.pdf"
+
+[[certificate]]
+title = "Intermediate Machine Learning"
+issuer = "Kaggle Learn"
+date = "2024-11"
+
+[[certificate.links]]
+label = "Credential"
+url = "https://www.kaggle.com"
+
+[[certificate]]
+title = "Data Visualization with Python"
+issuer = "Cognitive Class — IBM Developer Skills Network"
+date = "2024-11"
+
+[[certificate.links]]
+label = "Credential"
+url = "https://courses.cognitiveclass.ai/certificates/260902891d7f40b48279dc7384437c65"
+
+[[certificate]]
+title = "Supervised Machine Learning: Regression and Classification"
+issuer = "DeepLearning.AI"
+date = "2024-10"
+
+[[certificate.links]]
+label = "Credential"
+url = "https://coursera.org/verify/NT5SJEAP7NXW"
+
+[[certificate]]
+title = "International UAV Competition — Participation Certificate"
+issuer = "TEKNOFEST"
+date = "2022"
+
+[[certificate.links]]
+label = "Credential"
+url = "https://drive.google.com/file/d/1J2l5ayrBro_s87tCKRlrJYpC8DU2To3r/view"
 
 [[project]]
-name = "megen"
-summary = "TOML-driven profile and resume generator"
-description = "Parses structured profile data into an owned C model."
-technologies = ["C", "TOML"]
+name = "5-stage RISC-V processor"
+category = "low_level"
+show_in_cv = true
+summary = "Pipelined RV32I processor implemented in SystemVerilog."
+technologies = ["SystemVerilog", "RISC-V", "Verilator", "Python"]
 highlights = [
-    "Implements nested array-of-table parsing",
-    "Uses explicit ownership and cleanup",
+    "Implemented a 5-stage RV32I pipeline with forwarding, load-use stalls, and branch/jump flushing.",
+    "Built automated simulation and verification infrastructure using Verilator and Python.",
 ]
 
 [[project.links]]
 label = "Repository"
-url = "https://github.com/example/megen"
+url = "https://github.com/AysenurYrr/riscv-rtl-experiments"
 
-[[academic_work]]
-title = "Teaching Assistant"
-organization = "Example University"
-technologies = ["C", "Linux"]
+[[project]]
+name = "megen"
+category = "systems"
+show_in_cv = true
+summary = "TOML-driven profile, CV, and personal publishing generator written in C."
+technologies = ["C", "TOML", "LaTeX"]
 highlights = [
-    "Led weekly laboratory sessions",
-    "Prepared systems programming exercises",
+    "Designed an owned C data model for structured profile information.",
+    "Implemented TOML parsing and ATS-oriented LaTeX/PDF generation.",
 ]
 
-[[academic_work.periods]]
-start = "2022-09"
-end = "2023-06"
+[[project.links]]
+label = "Repository"
+url = "https://github.com/AysenurYrr/megen"
 
-[[academic_work.periods]]
-start = "2024-09"
 
-[[academic_work.links]]
-label = "Course page"
-url = "https://example.com/courses/systems-programming"
+[[project]]
+name = "SafeVisor-OHS"
+category = "web"
+show_in_cv = false
+summary = "Full-stack occupational health and safety management platform."
+technologies = ["Python", "FastAPI", "React", "PostgreSQL", "Docker"]
+
+[[project.links]]
+label = "Repository"
+url = "https://github.com/AysenurYrr/SafeVisor-OHS"
+
+[[project]]
+name = "emergency-drone-coordination"
+category = "systems"
+show_in_cv = true
+summary = "Multi-threaded emergency response and autonomous drone coordination system implemented in C."
+description = "Simulates concurrent drone and survivor activity with mission assignment, network communication, thread-safe shared state, and real-time visualization."
+technologies = [
+    "C",
+    "POSIX Threads",
+    "BSD Sockets",
+    "SDL2",
+    "WebSocket",
+    "JSON-C"
+]
+highlights = [
+    "Implemented concurrent drone and survivor processing using POSIX threads, mutexes, semaphores, and condition variables.",
+    "Developed thread-safe shared data structures and mission assignment logic for coordinating multiple drones.",
+    "Implemented TCP communication and real-time SDL/WebSocket visualization of drone and survivor state."
+]
+
+[[project.links]]
+label = "Repository"
+url = "https://github.com/AysenurYrr/emergency-drone-coordination"
+
+[[research_project]]
+title = "Undergraduate Researcher"
+organization = "Field Robotics Laboratory, Istanbul Medeniyet University"
+start = "2021"
+end = "2025"
+highlights = [
+    "Conducted research involving aerial, ground, and surface robotic systems.",
+    "Participated in field testing and validation of robotic systems in real-world environments.",
+]
+
+[[research_project]]
+title = "Mobile Phone-Based Victim Localization in Rubble Using Multiple UAVs"
+organization = "Istanbul Medeniyet University"
+sponsors = ["NVIDIA"]
+technologies = ["C++", "ArduPilot", "ROS", "Gazebo", "MAVROS"]
+start = "2024-03"
+end = "2025-04"
+highlights = [
+    "Developed a Gazebo and ROS environment for coordinating three UAVs in formation flight.",
+    "Implemented autonomous UAV flight software in C++ for a search-and-rescue mission.",
+    "Configured the NVIDIA Jetson Xavier development environment and project dependencies.",
+]
+
+
+[[research_project]]
+title = "Makine Öğrenimi Tabanlı Entegre Su Çıkarma Derinliği Karar Sistemi"
+start = "2023-04"
+end = "2024-01"
+organization = "Istanbul Medeniyet University"
+sponsors = ["TÜBİTAK 1002"]
+technologies = [
+    "Python",
+    "Machine Learning",
+    "Data Analysis",
+    "Data Science"
+]
+highlights = [
+    "Prepared the project dataset from online data sources, including data preparation, cleaning, exploratory data analysis (EDA), and feature engineering.",
+    "Developed Python-based prediction models for estimating chlorophyll concentration in water."
+]
+
+
+[[research_project]]
+title = "Düşük Maliyetli Sabit Kanatlı İHA Kullanarak Havadan Radyo Sinyali Konumlandırma"
+start = "2022-01"
+end = "2023-01"
+organization = "Istanbul Medeniyet University"
+sponsors = ["TÜBİTAK 2209"]
+technologies = [
+    "Gazebo",
+    "Fixed-Wing UAV Simulation",
+    "ROS",
+    "Python",
+    "MAVROS"
+]
+highlights = [
+    "Developed and tested flight algorithms for a fixed-wing UAV using a Gazebo simulation environment.",
+    "Contributed to the Gazebo simulation component of the project, while signal detection and localization algorithms were evaluated separately in MATLAB."
+]
