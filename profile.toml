@@ -1,12 +1,12 @@
 [personal]
 name = "AYŞENUR YÖRÜR"
 title = "Computer Engineer — Graphics & Low-Level Systems"
-location = "İstanbul, Türkiye"
+location = "Istanbul, Turkey"
 email = "aysenuryorur0@gmail.com"
 linkedin = "https://tr.linkedin.com/in/aysenur-yorur"
 github = "https://github.com/AysenurYrr"
 summary = "Computer engineer focused on graphics systems, GPU architecture, and compiler infrastructure, with a low-level, performance-oriented approach to building software."
-skills = ["C / C++", "Graphics Systems", "Low-Level Systems", "GPU Architecture", "Compiler Infrastructure"]
+skills = ["C / C++", "GPU Architecture", "Compiler Infrastructure"]
 
 [[experience]]
 company = "HAVELSAN"
@@ -67,6 +67,7 @@ url = "https://fieldroboticslab.github.io/comp_RW.html##UAV2022"
 title = "C Programming For Beginners"
 issuer = "Huw Collingbourne"
 date = "2022-11"
+show_in_cv = true
 
 [[certificate.links]]
 label = "Credential"
@@ -77,6 +78,7 @@ title = "Plepa C++ Course"
 issuer = "Necati Ergin"
 start = "2023"
 end = "2024"
+show_in_cv = true
 
 [[certificate.links]]
 label = "Credential"
@@ -86,6 +88,7 @@ url = "https://plepa.com/certs/65717437694.pdf"
 title = "Intermediate Machine Learning"
 issuer = "Kaggle Learn"
 date = "2024-11"
+show_in_cv = false
 
 [[certificate.links]]
 label = "Credential"
@@ -95,6 +98,7 @@ url = "https://www.kaggle.com"
 title = "Data Visualization with Python"
 issuer = "Cognitive Class — IBM Developer Skills Network"
 date = "2024-11"
+show_in_cv = false
 
 [[certificate.links]]
 label = "Credential"
@@ -104,6 +108,7 @@ url = "https://courses.cognitiveclass.ai/certificates/260902891d7f40b48279dc7384
 title = "Supervised Machine Learning: Regression and Classification"
 issuer = "DeepLearning.AI"
 date = "2024-10"
+show_in_cv = false
 
 [[certificate.links]]
 label = "Credential"
@@ -113,40 +118,55 @@ url = "https://coursera.org/verify/NT5SJEAP7NXW"
 title = "International UAV Competition — Participation Certificate"
 issuer = "TEKNOFEST"
 date = "2022"
+show_in_cv = true
 
 [[certificate.links]]
 label = "Credential"
 url = "https://drive.google.com/file/d/1J2l5ayrBro_s87tCKRlrJYpC8DU2To3r/view"
 
 [[project]]
-name = "5-stage RISC-V processor"
+name = "5-Stage RISC-V Processor"
 category = "low_level"
 show_in_cv = true
-summary = "Pipelined RV32I processor implemented in SystemVerilog."
-technologies = ["SystemVerilog", "RISC-V", "Verilator", "Python"]
+summary = "Five-stage pipelined RV32I processor implemented in SystemVerilog."
+description = "In-order, single-issue RV32I core with forwarding, hazard handling, branch control, and automated verification."
+technologies = ["SystemVerilog", "RISC-V", "Verilator"]
 highlights = [
-    "Implemented a 5-stage RV32I pipeline with forwarding, load-use stalls, and branch/jump flushing.",
-    "Built automated simulation and verification infrastructure using Verilator and Python.",
+    "Designed a pipelined RV32I processor with forwarding, load-use stalls, branch flushing, and automated verification."
 ]
-
 [[project.links]]
 label = "Repository"
 url = "https://github.com/AysenurYrr/riscv-rtl-experiments"
+
 
 [[project]]
 name = "megen"
 category = "systems"
 show_in_cv = true
-summary = "TOML-driven profile, CV, and personal publishing generator written in C."
+summary = "C-based TOML profile and resume generator."
+description = "Parses structured profile data into an owned C model and generates LaTeX/PDF output."
 technologies = ["C", "TOML", "LaTeX"]
 highlights = [
-    "Designed an owned C data model for structured profile information.",
-    "Implemented TOML parsing and ATS-oriented LaTeX/PDF generation.",
+    "Built a TOML-driven CV generator in C with explicit memory ownership, parsing, cleanup, and ATS-oriented LaTeX rendering."
 ]
-
 [[project.links]]
 label = "Repository"
 url = "https://github.com/AysenurYrr/megen"
+
+
+[[project]]
+name = "Emergency Drone Coordination System"
+category = "systems"
+show_in_cv = true
+summary = "Multi-threaded emergency-response and autonomous drone coordination system implemented in C."
+description = "Concurrent coordination system with mission scheduling, networking, synchronized shared state, and real-time visualization."
+technologies = ["C", "POSIX Threads", "BSD Sockets"]
+highlights = [
+    "Implemented a multi-threaded drone coordination system using synchronization primitives and TCP socket communication."
+]
+[[project.links]]
+label = "Repository"
+url = "https://github.com/AysenurYrr/emergency-drone-coordination"
 
 
 [[project]]
@@ -154,45 +174,11 @@ name = "SafeVisor-OHS"
 category = "web"
 show_in_cv = false
 summary = "Full-stack occupational health and safety management platform."
+description = "FastAPI and React application with authentication, role-based access control, persistent storage, and containerized deployment."
 technologies = ["Python", "FastAPI", "React", "PostgreSQL", "Docker"]
-
 [[project.links]]
 label = "Repository"
 url = "https://github.com/AysenurYrr/SafeVisor-OHS"
-
-[[project]]
-name = "emergency-drone-coordination"
-category = "systems"
-show_in_cv = true
-summary = "Multi-threaded emergency response and autonomous drone coordination system implemented in C."
-description = "Simulates concurrent drone and survivor activity with mission assignment, network communication, thread-safe shared state, and real-time visualization."
-technologies = [
-    "C",
-    "POSIX Threads",
-    "BSD Sockets",
-    "SDL2",
-    "WebSocket",
-    "JSON-C"
-]
-highlights = [
-    "Implemented concurrent drone and survivor processing using POSIX threads, mutexes, semaphores, and condition variables.",
-    "Developed thread-safe shared data structures and mission assignment logic for coordinating multiple drones.",
-    "Implemented TCP communication and real-time SDL/WebSocket visualization of drone and survivor state."
-]
-
-[[project.links]]
-label = "Repository"
-url = "https://github.com/AysenurYrr/emergency-drone-coordination"
-
-[[research_project]]
-title = "Undergraduate Researcher"
-organization = "Field Robotics Laboratory, Istanbul Medeniyet University"
-start = "2021"
-end = "2025"
-highlights = [
-    "Conducted research involving aerial, ground, and surface robotic systems.",
-    "Participated in field testing and validation of robotic systems in real-world environments.",
-]
 
 [[research_project]]
 title = "Mobile Phone-Based Victim Localization in Rubble Using Multiple UAVs"
@@ -209,7 +195,7 @@ highlights = [
 
 
 [[research_project]]
-title = "Makine Öğrenimi Tabanlı Entegre Su Çıkarma Derinliği Karar Sistemi"
+title = "Machine Learning-Based Integrated Decision System for Water Extraction Depth"
 start = "2023-04"
 end = "2024-01"
 organization = "Istanbul Medeniyet University"
@@ -227,7 +213,7 @@ highlights = [
 
 
 [[research_project]]
-title = "Düşük Maliyetli Sabit Kanatlı İHA Kullanarak Havadan Radyo Sinyali Konumlandırma"
+title = "Aerial Radio Signal Localization Using a Low-Cost Fixed-Wing UAV"
 start = "2022-01"
 end = "2023-01"
 organization = "Istanbul Medeniyet University"

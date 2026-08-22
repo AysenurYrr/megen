@@ -122,6 +122,7 @@ struct certificate {
 	char *title;
 	char *issuer;
 	struct date_range period;
+	bool show_in_cv;
 
 	char *description;
 

@@ -224,9 +224,9 @@ static int render_personal(FILE *f, const struct personal_info *personal)
 
 	if (fprintf(f,
 		    "}%%\n\\hfill%%\n"
-		    "{\\color{accent}\\raisebox{0.45ex}{\\rule{1.25cm}{0.45pt}}}%%\n"
-		    "\\hspace{0.6em}%%\n"
-		    "{\\ttfamily\\bfseries\\fontsize{11.5}{13}\\selectfont\\color{accent} 0x}\\par\n") < 0)
+		    "{\\color{accent}\\raisebox{0.6ex}{\\rule{1.4cm}{0.6pt}}}%%\n"
+		    "\\hspace{0.65em}%%\n"
+		    "{\\ttfamily\\bfseries\\fontsize{14}{16}\\selectfont\\color{accent} 0x41595345}\\par\n") < 0)
 		return -1;
 
 	if (personal->title) {
@@ -552,8 +552,15 @@ static int render_awards(FILE *f, const struct profile *profile)
 static int render_certificates(FILE *f, const struct profile *profile)
 {
 	size_t i, j;
+	int has_visible_certificate = 0;
 
-	if (profile->certificate_count == 0)
+	for (i = 0; i < profile->certificate_count; i++) {
+		if (profile->certificates[i].show_in_cv) {
+			has_visible_certificate = 1;
+			break;
+		}
+	}
+	if (!has_visible_certificate)
 		return 0;
 
 	if (fprintf(f, "\\cvsection{Certificates}\n") < 0)
@@ -561,6 +568,8 @@ static int render_certificates(FILE *f, const struct profile *profile)
 
 	for (i = 0; i < profile->certificate_count; i++) {
 		const struct certificate *cert = &profile->certificates[i];
+		if (!cert->show_in_cv)
+			continue;
 
 		/* Title on left, date on right */
 		if (fprintf(f, "\\textbf{") < 0)
@@ -633,53 +642,52 @@ static int render_projects(FILE *f, const struct profile *profile)
 		if (!proj->show_in_cv)
 			continue;
 
-		/* Project name on left, technologies on right */
-		if (fprintf(f, "\\textbf{") < 0)
+		if (fprintf(f, "\\Needspace{8\\baselineskip}\\textbf{") < 0)
 			return -1;
 
 		if (latex_write_escaped(f, proj->name) < 0)
 			return -1;
 
-		if (fprintf(f, "} \\hfill ") < 0)
+		if (fprintf(f, "}") < 0)
+			return -1;
+		if (proj->link_count > 0) {
+			if (fprintf(f, " {\\small\\color{muted}\\textbullet{} ") < 0)
+				return -1;
+			for (j = 0; j < proj->link_count; j++) {
+				if (render_labeled_url(f, &proj->links[j]) < 0 ||
+				    (j + 1 < proj->link_count &&
+				     fprintf(f, " \\textbullet{} ") < 0))
+					return -1;
+			}
+			if (fprintf(f, "}") < 0)
+				return -1;
+		}
+		if (fprintf(f, " \\hfill ") < 0)
 			return -1;
 
 		if (proj->technology_count > 0) {
+			if (fprintf(f, "{\\small\\color{accent} ") < 0)
+				return -1;
 			for (j = 0; j < proj->technology_count; j++) {
 				if (latex_write_escaped(f, proj->technologies[j]) < 0)
 					return -1;
 
-				if (j < proj->technology_count - 1) {
-					if (fprintf(f, ", ") < 0)
+				if (j + 1 < proj->technology_count) {
+					if (fprintf(f, " \\textbullet{} ") < 0)
 						return -1;
 				}
 			}
+			if (fprintf(f, "}") < 0)
+				return -1;
 		}
-
-		if (fprintf(f, "\\\\\n") < 0)
+		if (fprintf(f, "\\par\n") < 0)
 			return -1;
 
-		/* Summary on next line */
-		if (proj->summary) {
-			if (latex_write_escaped(f, proj->summary) < 0)
-				return -1;
-
-			if (fprintf(f, "\n") < 0)
-				return -1;
-		}
-
-		/* Description if present */
-		if (proj->description) {
-			if (latex_write_escaped(f, proj->description) < 0)
-				return -1;
-
-			if (fprintf(f, "\n") < 0)
-				return -1;
-		}
-
-		if (render_highlights(f, proj->highlights, proj->highlight_count) < 0)
+		if (render_highlights(f, proj->highlights,
+				      proj->highlight_count) < 0)
 			return -1;
 
-		if (fprintf(f, "\n") < 0)
+		if (fprintf(f, "\\vspace{4pt}\n") < 0)
 			return -1;
 	}
 
@@ -776,6 +784,14 @@ int latex_render(const struct profile *profile, const char *path)
 		goto error;
 
 	if (render_certificates(f, profile) < 0)
+		goto error;
+
+	/* Selectable end-of-program signature at the bottom of the final page. */
+	if (fprintf(f,
+		    "\\vfill\\noindent\\hfill%%\n"
+		    "{\\color{accent}\\raisebox{0.6ex}{\\rule{1.4cm}{0.6pt}}}%%\n"
+		    "\\hspace{0.65em}%%\n"
+		    "{\\ttfamily\\bfseries\\fontsize{14}{16}\\selectfont\\color{accent} s\\_endpgm}\\par\n") < 0)
 		goto error;
 
 	if (fprintf(f, "\\end{document}\n") < 0)

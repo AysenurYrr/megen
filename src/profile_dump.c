@@ -152,6 +152,8 @@ void profile_dump(const struct profile *profile)
 		printf("certificate[%zu]:\n", i);
 		dump_string("title", certificate->title);
 		dump_string("issuer", certificate->issuer);
+		printf("  show_in_cv: %s\n",
+		       certificate->show_in_cv ? "true" : "false");
 		printf("  period: ");
 		dump_date_range(&certificate->period);
 		putchar('\n');

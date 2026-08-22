@@ -510,6 +510,7 @@ static int parse_certificates(toml_table_t *root, struct profile *profile)
 	for (i = 0; i < length; i++) {
 		struct certificate *certificate = &profile->certificates[i];
 		toml_table_t *table = toml_array_table(array, i);
+		toml_value_t show_in_cv;
 
 		if (!table) {
 			fprintf(stderr, "megen: certificate entry %d must be a table\n",
@@ -524,6 +525,15 @@ static int parse_certificates(toml_table_t *root, struct profile *profile)
 		    parse_links(table, &certificate->links,
 				&certificate->link_count))
 			return -1;
+
+		show_in_cv = toml_table_bool(table, "show_in_cv");
+		if (!show_in_cv.ok) {
+			fprintf(stderr,
+				"megen: certificate entry %d requires boolean 'show_in_cv'\n",
+				i + 1);
+			return -1;
+		}
+		certificate->show_in_cv = show_in_cv.u.b;
 
 		get_string(table, "description", &certificate->description);
 	}
