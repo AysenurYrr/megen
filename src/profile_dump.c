@@ -137,6 +137,8 @@ void profile_dump(const struct profile *profile)
 		printf("award[%zu]:\n", i);
 		dump_string("title", award->title);
 		dump_string("issuer", award->issuer);
+		printf("  show_in_website_projects: %s\n",
+		       award->show_in_website_projects ? "true" : "false");
 		printf("  date: ");
 		dump_date(&award->date);
 		putchar('\n');
@@ -169,6 +171,7 @@ void profile_dump(const struct profile *profile)
 		dump_string("name", project->name);
 		dump_string("summary", project->summary);
 		dump_string("description", project->description);
+		dump_string("video", project->video);
 		printf("  category: %s\n", project_category_name(project->category));
 		printf("  show_in_cv: %s\n", project->show_in_cv ? "true" : "false");
 		dump_string_array("technologies", project->technologies,
@@ -197,6 +200,10 @@ void profile_dump(const struct profile *profile)
 		dump_string("title", project->title);
 		dump_string("organization", project->organization);
 		dump_string("role", project->role);
+		dump_string("video", project->video);
+		dump_string("description", project->description);
+		printf("  show_in_website_projects: %s\n",
+		       project->show_in_website_projects ? "true" : "false");
 		dump_string_array("sponsors", project->sponsors,
 				  project->sponsor_count);
 		dump_string_array("technologies", project->technologies,

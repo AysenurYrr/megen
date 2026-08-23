@@ -431,12 +431,20 @@ static int render_research_projects(FILE *f, const struct profile *profile)
 	for (i = 0; i < profile->research_project_count; i++) {
 		const struct research_project *project =
 			&profile->research_projects[i];
+		struct link video_link = { "Video", project->video };
 		if (fprintf(f, "\\Needspace{12\\baselineskip}\\begin{samepage}\n") < 0)
 			return -1;
 
 		if (fprintf(f, "\\textbf{") < 0 ||
 		    latex_write_escaped(f, project->title) < 0 ||
-		    fprintf(f, "}\\par\n") < 0 ||
+		    fprintf(f, "}") < 0)
+			return -1;
+		if (project->video &&
+		    (fprintf(f, " {\\small\\color{muted}\\textbullet{} ") < 0 ||
+		     render_labeled_url(f, &video_link) < 0 ||
+		     fprintf(f, "}") < 0))
+			return -1;
+		if (fprintf(f, "\\par\n") < 0 ||
 		    latex_write_escaped(f, project->organization) < 0 ||
 		    fprintf(f, " \\hfill ") < 0 ||
 		    latex_render_date(f, project->period.start) < 0 ||
@@ -639,6 +647,7 @@ static int render_projects(FILE *f, const struct profile *profile)
 
 	for (i = 0; i < profile->project_count; i++) {
 		const struct project *proj = &profile->projects[i];
+		struct link video_link = { "Video", proj->video };
 		if (!proj->show_in_cv)
 			continue;
 
@@ -650,7 +659,7 @@ static int render_projects(FILE *f, const struct profile *profile)
 
 		if (fprintf(f, "}") < 0)
 			return -1;
-		if (proj->link_count > 0) {
+		if (proj->link_count > 0 || proj->video) {
 			if (fprintf(f, " {\\small\\color{muted}\\textbullet{} ") < 0)
 				return -1;
 			for (j = 0; j < proj->link_count; j++) {
@@ -659,6 +668,11 @@ static int render_projects(FILE *f, const struct profile *profile)
 				     fprintf(f, " \\textbullet{} ") < 0))
 					return -1;
 			}
+			if (proj->video &&
+			    ((proj->link_count > 0 &&
+			      fprintf(f, " \\textbullet{} ") < 0) ||
+			     render_labeled_url(f, &video_link) < 0))
+				return -1;
 			if (fprintf(f, "}") < 0)
 				return -1;
 		}

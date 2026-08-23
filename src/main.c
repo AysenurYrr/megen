@@ -31,6 +31,8 @@ static int copy_site_assets(void)
 					   "build/site/assets/images") ||
 	       static_html_copy_asset_tree("web/assets/notes",
 					   "build/site/assets/notes") ||
+	       static_html_copy_asset_tree("web/assets/videos",
+					   "build/site/assets/videos") ||
 	       static_html_copy_asset_tree("web/assets/fonts",
 					   "build/site/assets/fonts");
 }

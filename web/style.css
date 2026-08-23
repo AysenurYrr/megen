@@ -175,24 +175,6 @@ a {
   text-align: center;
 }
 
-.hero-meta {
-  margin: 0 0 1.5rem;
-  color: var(--marker);
-  font-family: var(--font-mono);
-  font-size: clamp(0.72rem, 1.3vw, 0.85rem);
-  letter-spacing: 0.055em;
-}
-
-.hero-meta::before {
-  display: inline-block;
-  width: 2.25rem;
-  height: 1px;
-  margin-right: 0.8rem;
-  vertical-align: middle;
-  content: "";
-  background: var(--marker);
-}
-
 .hero-name {
   margin: 0;
   color: var(--ink);
@@ -261,8 +243,12 @@ main {
   padding: clamp(4rem, 7vw, 6rem) 0;
 }
 
-.about-section {
-  padding-top: clamp(0.75rem, 2vw, 1.5rem);
+.notes-section {
+  padding-bottom: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.projects-section {
+  padding-top: clamp(1.25rem, 2.5vw, 2rem);
 }
 
 .section-heading {
@@ -307,19 +293,6 @@ main {
   font-family: inherit;
   font-size: clamp(0.9rem, 2vw, 1.05rem);
   font-weight: 550;
-}
-
-.about-content {
-  margin-left: calc(var(--address-width) + var(--node-width) + 1.6rem);
-  margin-top: clamp(1.25rem, 2.5vw, 1.5rem);
-}
-
-.about-summary {
-  max-width: 46rem;
-  margin: 0;
-  color: #c5d0d6;
-  font-size: clamp(1.08rem, 2vw, 1.35rem);
-  line-height: 1.75;
 }
 
 .memory-group {
@@ -454,11 +427,13 @@ main {
   margin: 0;
 }
 
-.project-gallery img {
+.project-gallery img,
+.project-gallery video {
   display: block;
   width: 100%;
   height: auto;
   border: 1px solid var(--line);
+  background: var(--surface);
 }
 
 .project-figure-link,
@@ -572,7 +547,6 @@ main {
 
 .hero-name,
 .hero-title,
-.about-summary,
 .entry-heading h3,
 .entry-heading h4,
 .entry-content > p {
@@ -581,7 +555,6 @@ main {
 
 .memory-rail,
 .site-nav,
-.hero-meta,
 .hero-skills,
 .section-heading,
 .entry-address,
@@ -627,7 +600,8 @@ main {
     width: 100%;
   }
 
-  .project-gallery img {
+  .project-gallery img,
+  .project-gallery video {
     width: 100%;
   }
 
@@ -642,10 +616,6 @@ main {
 
   .section-heading::after {
     margin-left: 0.55rem;
-  }
-
-  .about-content {
-    margin-left: calc(var(--address-width) + var(--node-width) + 0.55rem);
   }
 
   .memory-entry {
@@ -674,10 +644,6 @@ main {
 
   .entry-heading a {
     justify-self: start;
-  }
-
-  .hero-meta::before {
-    width: 1.35rem;
   }
 
   .hero-name {

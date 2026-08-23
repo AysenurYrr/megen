@@ -5,7 +5,7 @@ location = "Istanbul, Turkey"
 email = "aysenuryorur0@gmail.com"
 linkedin = "https://tr.linkedin.com/in/aysenur-yorur"
 github = "https://github.com/AysenurYrr"
-summary = "Computer engineer focused on graphics systems, GPU architecture, and compiler infrastructure, with a low-level, performance-oriented approach to building software."
+summary = "I am a computer engineer with interest in low-level software development."
 skills = ["C / C++", "GPU Architecture", "Compiler Infrastructure"]
 
 [[experience]]
@@ -50,7 +50,7 @@ url = "https://drive.google.com/file/d/1EdsEu69vlwkXDOf2DJz1Pe6LyVpm_LGM/view"
 title = "Performance Award — International UAV Competition"
 issuer = "TEKNOFEST"
 date = "2023"
-
+show_in_website_projects = true
 highlights = [
     "Led the team as Team Captain and developed UAV flight and simulation software using Python, ROS, MAVROS, and Gazebo for an autonomous target tracking and capture system."
 ]
@@ -62,6 +62,34 @@ url = "https://drive.google.com/file/d/1FtwzgZz_wlXY4Fdh4lXFrdEze8stdcym/view"
 [[award.links]]
 label = "Project"
 url = "https://fieldroboticslab.github.io/comp_RW.html##UAV2022"
+
+[[award.links]]
+label = "Video"
+url = "https://www.youtube.com/watch?v=Ik_xfePsnls"
+
+[[award.media]]
+type = "image"
+src = "assets/images/uav_2023_1.JPG"
+caption = "// autonomous UAV CAD model"
+show_on_index = true
+
+[[award.media]]
+type = "image"
+src = "assets/images/uav_2023_4.jpg"
+caption = "// UAV flight electronics wiring diagram"
+show_on_index = true
+
+[[award.media]]
+type = "image"
+src = "assets/images/uav_2023_2.jpg"
+caption = "// target tracking and flight control architecture"
+show_on_index = true
+
+[[award.media]]
+type = "image"
+src = "assets/images/uav_2023_3.jpg"
+caption = "// UAV flight electronics wiring diagram"
+show_on_index = true
 
 [[certificate]]
 title = "C Programming For Beginners"
@@ -155,19 +183,22 @@ highlights = [
 label = "Repository"
 url = "https://github.com/AysenurYrr/riscv-rtl-experiments/tree/master/pipeline"
 
-[[project.images]]
+[[project.media]]
+type = "image"
 src = "assets/images/riscv_pipeline.png"
-caption = "fig_02 // Konata pipeline trace"
+caption = "// Konata pipeline trace"
 show_on_index = true
 
-[[project.images]]
+[[project.media]]
+type = "image"
 src = "assets/images/riscv_coverage.png"
-caption = "fig_03 // LCOV line coverage report"
+caption = "// LCOV line coverage report"
 show_on_index = true
 
-[[project.images]]
+[[project.media]]
+type = "image"
 src = "assets/images/custom_instruction_set.png"
-caption = "fig_01 // custom_instruction_set"
+caption = "// custom_instruction_set"
 show_on_index = true
 
 
@@ -185,19 +216,22 @@ highlights = [
 label = "Repository"
 url = "https://github.com/AysenurYrr/emergency-drone-coordination"
 
-[[project.images]]
+[[project.media]]
+type = "image"
 src = "assets/images/2_drone_5x7.png"
-caption = "fig_01 // two-drone coordination simulation"
+caption = "// two-drone coordination simulation"
 show_on_index = true
 
-[[project.images]]
+[[project.media]]
+type = "image"
 src = "assets/images/5_drone_2_7x5.png"
-caption = "fig_02 // five-drone concurrent mission execution"
+caption = "// five-drone concurrent mission execution"
 show_on_index = true
 
-[[project.images]]
+[[project.media]]
+type = "image"
 src = "assets/images/5_drone_7x5.png"
-caption = "fig_03 // five-drone concurrent mission execution"
+caption = "// five-drone concurrent mission execution"
 show_on_index = true
 
 
@@ -206,11 +240,13 @@ show_on_index = true
 name = "megen"
 category = "systems"
 show_in_cv = true
-summary = "C-based TOML profile and resume generator."
-description = "Parses structured profile data into an owned C model and generates LaTeX/PDF output."
-technologies = ["C", "TOML", "LaTeX"]
+summary = "TOML-driven static portfolio and CV generator written in C."
+description = "Parses one structured profile into an owned C model, then generates an ATS-oriented LaTeX/PDF CV and a static portfolio with project, research, award, media gallery, video, and lightbox support."
+technologies = ["C", "TOML", "LaTeX", "HTML", "CSS", "JavaScript", "Make"]
 highlights = [
-    "Built a TOML-driven CV generator in C with explicit memory ownership, parsing, cleanup, and ATS-oriented LaTeX rendering."
+    "Built a single-source publishing pipeline that generates both an ATS-oriented PDF CV and a responsive static portfolio from profile.toml.",
+    "Implemented validated TOML parsing, explicit memory ownership and cleanup, conditional links, and data-driven project, research, award, image, and video rendering.",
+    "Developed a responsive justified technical-media gallery with natural aspect ratios, accessible lightbox behavior, and static asset copying."
 ]
 [[project.links]]
 label = "Repository"
@@ -221,16 +257,31 @@ url = "https://github.com/AysenurYrr/megen"
 name = "SafeVisor-OHS"
 category = "web"
 show_in_cv = false
-summary = "Full-stack occupational health and safety management platform."
-description = "FastAPI and React application with authentication, role-based access control, persistent storage, and containerized deployment."
-technologies = ["Python", "FastAPI", "React", "PostgreSQL", "Docker"]
+summary = "Full-stack workplace safety monitoring and operations platform."
+description = "FastAPI and React system for managing personnel, departments, factory areas, cameras, PPE violations, and pose alerts. It integrates YOLO/OpenCV-based PPE detection and employee face-embedding matching, with JWT authentication, role-restricted routes, PostgreSQL persistence, Alembic migrations, and Docker-based services."
+technologies = [
+    "Python",
+    "FastAPI",
+    "React",
+    "Vite",
+    "Tailwind CSS",
+    "SQLAlchemy",
+    "PostgreSQL",
+    "Alembic",
+    "YOLO",
+    "OpenCV",
+    "Docker"
+]
 [[project.links]]
 label = "Repository"
 url = "https://github.com/AysenurYrr/SafeVisor-OHS"
 
 [[research_project]]
-title = "Mobile Phone-Based Victim Localization in Rubble Using Multiple UAVs"
+title = "Mobile Phone-Based Victim Localization in Debris Using Multiple UAVs"
+show_in_website_projects = true
 organization = "Istanbul Medeniyet University"
+video = "https://www.youtube.com/watch?v=OkSlxQqhhuk"
+description = "Multi-UAV search-and-rescue research platform combining coordinated Gazebo simulation, autonomous flight control, and SDR-based radio signal localization on NVIDIA Jetson Xavier."
 sponsors = ["NVIDIA"]
 technologies = ["C++", "ArduPilot", "ROS", "Gazebo", "MAVROS"]
 start = "2024-03"
@@ -241,12 +292,58 @@ highlights = [
     "Configured the NVIDIA Jetson Xavier development environment and project dependencies.",
 ]
 
+[[research_project.media]]
+type = "image"
+src = "assets/images/sdr_4.png"
+caption = "// autonomous SDR scan mission flow"
+show_on_index = true
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/sdr_2.png"
+caption = "// coordinated UAV scan path"
+show_on_index = true
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/sdr_3.png"
+caption = "// Gazebo and Mission Planner scan simulation"
+show_on_index = true
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/sdr_6.png"
+caption = "// multi-UAV signal triangulation geometry"
+show_on_index = true
+
+
+[[research_project.media]]
+type = "video"
+src = "assets/videos/sdr_video_1.mp4"
+caption = "// coordinated UAV signal-localization simulation"
+show_on_index = true
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/sdr_1.png"
+caption = "// multi-UAV signal triangulation geometry"
+show_on_index = false
+
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/sdr_5.png"
+caption = "// UAV SDR hardware architecture"
+show_on_index = false
+
+
 
 [[research_project]]
 title = "Machine Learning-Based Integrated Decision System for Water Extraction Depth"
 start = "2023-04"
 end = "2024-01"
 organization = "Istanbul Medeniyet University"
+description = "Data-driven decision-support study using prepared environmental datasets and Python prediction models to estimate chlorophyll concentration for water extraction depth analysis."
 sponsors = ["TÜBİTAK 1002"]
 technologies = [
     "Python",
@@ -262,9 +359,11 @@ highlights = [
 
 [[research_project]]
 title = "Aerial Radio Signal Localization Using a Low-Cost Fixed-Wing UAV"
+show_in_website_projects = true
 start = "2022-01"
 end = "2023-01"
 organization = "Istanbul Medeniyet University"
+description = "Low-cost fixed-wing UAV research prototype combining ROS/MAVROS flight simulation with directional antenna and radio receiver hardware for aerial signal-localization experiments."
 sponsors = ["TÜBİTAK 2209"]
 technologies = [
     "Gazebo",
@@ -277,3 +376,40 @@ highlights = [
     "Developed and tested flight algorithms for a fixed-wing UAV using a Gazebo simulation environment.",
     "Contributed to the Gazebo simulation component of the project, while signal detection and localization algorithms were evaluated separately in MATLAB."
 ]
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/low_cost_uav_3.jpg"
+caption = "// assembled fixed-wing UAV prototype"
+show_on_index = true
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/low_cost_uav_1.jpg"
+caption = "// assembled fixed-wing UAV prototype"
+show_on_index = false
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/low_cost_uav_2.jpg"
+caption = "// assembled fixed-wing UAV prototype"
+show_on_index = false
+
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/low_cost_uav_4.jpg"
+caption = "// directional antenna assembly"
+show_on_index = true
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/low_cost_uav_5.jpeg"
+caption = "// radio receiver and control electronics"
+show_on_index = true
+
+[[research_project.media]]
+type = "image"
+src = "assets/images/low_cost_uav_6.jpeg"
+caption = "// RTL-SDR receiver"
+show_on_index = false

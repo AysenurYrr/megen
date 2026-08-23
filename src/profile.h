@@ -22,6 +22,8 @@ struct link {
 	char *url;
 };
 
+struct project_media;
+
 struct personal_info {
 	char *name;
 	char *title;
@@ -65,6 +67,8 @@ struct research_project {
 	char *title;
 	char *organization;
 	char *role;
+	char *video;
+	char *description;
 
 	char **sponsors;
 	size_t sponsor_count;
@@ -78,6 +82,9 @@ struct research_project {
 
 	struct link *links;
 	size_t link_count;
+	struct project_media *media;
+	size_t media_count;
+	bool show_in_website_projects;
 };
 
 struct award {
@@ -90,6 +97,9 @@ struct award {
 
 	struct link *links;
 	size_t link_count;
+	struct project_media *media;
+	size_t media_count;
+	bool show_in_website_projects;
 };
 
 enum project_category {
@@ -101,11 +111,18 @@ enum project_category {
 	PROJECT_CATEGORY_OTHER,
 };
 
-struct project_image {
+enum project_media_type {
+	PROJECT_MEDIA_IMAGE,
+	PROJECT_MEDIA_VIDEO,
+};
+
+struct project_media {
+	enum project_media_type type;
 	char *src;
 	char *caption;
 	char *alt;
 	char *link;
+	char *poster;
 	bool show_on_index;
 };
 
@@ -127,9 +144,10 @@ struct project {
 	char *github;
 	char *blog;
 	char *demo;
+	char *video;
 
-	struct project_image *images;
-	size_t image_count;
+	struct project_media *media;
+	size_t media_count;
 	bool show_in_cv;
 };
 

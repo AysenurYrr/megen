@@ -4,24 +4,28 @@
   const MAX_ROW_HEIGHT = 240;
   const JUSTIFY_THRESHOLD = 0.9;
 
-  function imageRatio(figure) {
-    const image = figure.querySelector("img");
-    return image?.naturalWidth && image?.naturalHeight
-      ? image.naturalWidth / image.naturalHeight
+  function mediaRatio(figure) {
+    const media = figure.querySelector("img, video");
+    if (media instanceof HTMLVideoElement)
+      return media.videoWidth && media.videoHeight
+        ? media.videoWidth / media.videoHeight
+        : 1;
+    return media?.naturalWidth && media?.naturalHeight
+      ? media.naturalWidth / media.naturalHeight
       : 1;
   }
 
   function setRowWidths(row, availableWidth, gap, completed) {
     const gapWidth = gap * Math.max(0, row.length - 1);
     const usableWidth = Math.max(0, availableWidth - gapWidth);
-    const ratioSum = row.reduce((sum, figure) => sum + imageRatio(figure), 0);
+    const ratioSum = row.reduce((sum, figure) => sum + mediaRatio(figure), 0);
     const justifiedHeight = usableWidth / ratioSum;
     const rowHeight = completed
       ? Math.min(justifiedHeight, MAX_ROW_HEIGHT)
       : Math.min(TARGET_ROW_HEIGHT, MAX_ROW_HEIGHT, justifiedHeight);
 
     row.forEach((figure) => {
-      figure.style.width = `${rowHeight * imageRatio(figure)}px`;
+      figure.style.width = `${rowHeight * mediaRatio(figure)}px`;
     });
   }
 
@@ -45,7 +49,7 @@
     let estimatedWidth = 0;
 
     figures.forEach((figure) => {
-      const nextWidth = TARGET_ROW_HEIGHT * imageRatio(figure);
+      const nextWidth = TARGET_ROW_HEIGHT * mediaRatio(figure);
       estimatedWidth += (row.length ? gap : 0) + nextWidth;
       row.push(figure);
 
@@ -73,10 +77,16 @@
     };
 
     galleries.forEach((gallery) => {
-      gallery.querySelectorAll("img").forEach((image) => {
-        if (!image.complete) {
-          image.addEventListener("load", scheduleLayout, { once: true });
-          image.addEventListener("error", scheduleLayout, { once: true });
+      gallery.querySelectorAll("img, video").forEach((media) => {
+        const ready = media instanceof HTMLVideoElement
+          ? media.readyState >= HTMLMediaElement.HAVE_METADATA
+          : media.complete;
+        if (!ready) {
+          const loadEvent = media instanceof HTMLVideoElement
+            ? "loadedmetadata"
+            : "load";
+          media.addEventListener(loadEvent, scheduleLayout, { once: true });
+          media.addEventListener("error", scheduleLayout, { once: true });
         }
       });
     });

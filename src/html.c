@@ -131,12 +131,86 @@ static int render_notes(FILE *f, const struct profile *profile)
 	return fputs("      </div>\n    </section>\n", f) == EOF ? -1 : 0;
 }
 
+static int render_project_gallery(FILE *f, const struct project_media *media,
+				  size_t media_count)
+{
+	size_t i;
+	size_t selected_count = 0;
+
+	for (i = 0; i < media_count; i++)
+		if (media[i].show_on_index)
+			selected_count++;
+	if (selected_count == 0)
+		return 0;
+	if (fputs("            <div class=\"project-gallery\">\n", f) == EOF)
+		return -1;
+	for (i = 0; i < media_count; i++) {
+		const struct project_media *item = &media[i];
+		const char *alt = item->alt ? item->alt : item->caption;
+
+		if (!item->show_on_index)
+			continue;
+		if (fputs("              <figure class=\"project-image\">\n                ", f) == EOF)
+			return -1;
+		if (item->type == PROJECT_MEDIA_VIDEO) {
+			if (fputs("<video controls preload=\"metadata\" playsinline src=\"", f) == EOF ||
+			    html_write_escaped(f, item->src, 1) < 0 ||
+			    fputs("\"", f) == EOF)
+				return -1;
+			if (item->poster &&
+			    (fputs(" poster=\"", f) == EOF ||
+			     html_write_escaped(f, item->poster, 1) < 0 ||
+			     fputs("\"", f) == EOF))
+				return -1;
+			if (fputs(">Your browser does not support HTML video.</video>\n", f) == EOF)
+				return -1;
+		} else if (item->link) {
+			if (fputs("<a class=\"project-figure-link\" href=\"", f) == EOF ||
+			    html_write_escaped(f, item->link, 1) < 0 ||
+			    fputs("\">", f) == EOF)
+				return -1;
+		} else if (fputs("<button class=\"project-figure-expand\" type=\"button\" data-lightbox-src=\"", f) == EOF ||
+			   html_write_escaped(f, item->src, 1) < 0 ||
+			   fputs("\" data-lightbox-caption=\"", f) == EOF ||
+			   html_write_escaped(f, item->caption, 1) < 0 ||
+			   fputs("\" aria-label=\"Expand image: ", f) == EOF ||
+			   html_write_escaped(f, item->caption, 1) < 0 ||
+			   fputs("\">", f) == EOF) {
+			return -1;
+		}
+		if (item->type == PROJECT_MEDIA_IMAGE &&
+		    (fputs("<img src=\"", f) == EOF ||
+		     html_write_escaped(f, item->src, 1) < 0 ||
+		     fputs("\" alt=\"", f) == EOF ||
+		     html_write_escaped(f, alt, 1) < 0 ||
+		     fputs("\" loading=\"lazy\">", f) == EOF ||
+		     fputs(item->link ? "</a>\n" : "</button>\n", f) == EOF))
+			return -1;
+		if (fputs("                <figcaption>", f) == EOF ||
+		    html_write_escaped(f, item->caption, 0) < 0 ||
+		    fputs("</figcaption>\n              </figure>\n", f) == EOF)
+			return -1;
+	}
+	return fputs("            </div>\n", f) == EOF ? -1 : 0;
+}
+
 static int render_projects(FILE *f, const struct profile *profile)
 {
 	size_t i;
 	size_t j;
+	size_t shown_research = 0;
+	size_t shown_awards = 0;
+	int has_website_research = 0;
+	int has_website_awards = 0;
 
-	if (profile->project_count == 0)
+	for (i = 0; i < profile->research_project_count; i++)
+		if (profile->research_projects[i].show_in_website_projects)
+			has_website_research = 1;
+	for (i = 0; i < profile->award_count; i++)
+		if (profile->awards[i].show_in_website_projects)
+			has_website_awards = 1;
+	if (profile->project_count == 0 && !has_website_research &&
+	    !has_website_awards)
 		return 0;
 	if (fputs("    <section class=\"site-section projects-section\" id=\"projects\" aria-labelledby=\"projects-title\">\n"
 		  "      <div class=\"section-heading\">\n"
@@ -151,12 +225,8 @@ static int render_projects(FILE *f, const struct profile *profile)
 		const char *project_text = project->description ?
 			project->description : project->summary;
 		int has_links = project->github || project->blog || project->demo ||
+			project->video ||
 			project->link_count > 0;
-		size_t index_image_count = 0;
-
-		for (j = 0; j < project->image_count; j++)
-			if (project->images[j].show_on_index)
-				index_image_count++;
 
 		if (fputs("        <article class=\"memory-entry project-entry\">\n"
 			  "          <span class=\"entry-address\">", f) == EOF ||
@@ -202,6 +272,11 @@ static int render_projects(FILE *f, const struct profile *profile)
 			     html_write_escaped(f, project->demo, 1) < 0 ||
 			     fputs("\" target=\"_blank\" rel=\"noreferrer noopener\">live demo ↗</a>", f) == EOF))
 				return -1;
+			if (project->video &&
+			    (fputs("<a href=\"", f) == EOF ||
+			     html_write_escaped(f, project->video, 1) < 0 ||
+			     fputs("\" target=\"_blank\" rel=\"noreferrer noopener\">video ↗</a>", f) == EOF))
+				return -1;
 			for (j = 0; j < project->link_count; j++) {
 				if (fputs("<a href=\"", f) == EOF ||
 				    html_write_escaped(f, project->links[j].url, 1) < 0 ||
@@ -213,46 +288,114 @@ static int render_projects(FILE *f, const struct profile *profile)
 			if (fputs("</div>\n", f) == EOF)
 				return -1;
 		}
-		if (index_image_count > 0) {
-			if (fputs("            <div class=\"project-gallery\">\n", f) == EOF)
-				return -1;
-			for (j = 0; j < project->image_count; j++) {
-				const struct project_image *image = &project->images[j];
-				const char *alt = image->alt ? image->alt : image->caption;
-				if (!image->show_on_index)
-					continue;
-				if (fputs("              <figure class=\"project-image\">\n                ", f) == EOF)
-					return -1;
-				if (image->link) {
-					if (fputs("<a class=\"project-figure-link\" href=\"", f) == EOF ||
-					    html_write_escaped(f, image->link, 1) < 0 ||
-					    fputs("\">", f) == EOF)
-						return -1;
-				} else if (fputs("<button class=\"project-figure-expand\" type=\"button\" data-lightbox-src=\"", f) == EOF ||
-					   html_write_escaped(f, image->src, 1) < 0 ||
-					   fputs("\" data-lightbox-caption=\"", f) == EOF ||
-					   html_write_escaped(f, image->caption, 1) < 0 ||
-					   fputs("\" aria-label=\"Expand image: ", f) == EOF ||
-					   html_write_escaped(f, image->caption, 1) < 0 ||
-					   fputs("\">", f) == EOF) {
-					return -1;
-				}
-				if (fputs("<img src=\"", f) == EOF ||
-				    html_write_escaped(f, image->src, 1) < 0 ||
-				    fputs("\" alt=\"", f) == EOF ||
-				    html_write_escaped(f, alt, 1) < 0 ||
-				    fputs("\" loading=\"lazy\">", f) == EOF ||
-				    fputs(image->link ? "</a>\n" : "</button>\n", f) == EOF ||
-				    fputs("                <figcaption>", f) == EOF ||
-				    html_write_escaped(f, image->caption, 0) < 0 ||
-				    fputs("</figcaption>\n              </figure>\n", f) == EOF)
-					return -1;
-			}
-			if (fputs("            </div>\n", f) == EOF)
-				return -1;
-		}
+		if (render_project_gallery(f, project->media,
+					   project->media_count) < 0)
+			return -1;
 		if (fputs("          </div>\n        </article>\n", f) == EOF)
 			return -1;
+	}
+
+	for (i = 0; i < profile->research_project_count; i++) {
+		const struct research_project *project = &profile->research_projects[i];
+
+		if (!project->show_in_website_projects)
+			continue;
+		if (fputs("        <article class=\"memory-entry project-entry research-project-entry\">\n"
+			  "          <span class=\"entry-address\">", f) == EOF ||
+		    render_address(f, 0x3000,
+				   profile->project_count + shown_research) < 0 ||
+		    fputs("</span>\n"
+			  "          <div class=\"entry-content\"><div class=\"entry-heading\"><h3>", f) == EOF ||
+		    html_write_escaped(f, project->title, 0) < 0 ||
+		    fputs("</h3></div>\n", f) == EOF)
+			return -1;
+		if (project->description &&
+		    (fputs("            <p>", f) == EOF ||
+		     html_write_escaped(f, project->description, 0) < 0 ||
+		     fputs("</p>\n", f) == EOF))
+			return -1;
+		if (project->technology_count > 0) {
+			if (fputs("            <p class=\"entry-technologies\">", f) == EOF)
+				return -1;
+			for (j = 0; j < project->technology_count; j++) {
+				if (j && fputs(" <span aria-hidden=\"true\">·</span> ", f) == EOF)
+					return -1;
+				if (html_write_escaped(f, project->technologies[j], 0) < 0)
+					return -1;
+			}
+			if (fputs("</p>\n", f) == EOF)
+				return -1;
+		}
+		if (project->link_count > 0 || project->video) {
+			if (fputs("            <div class=\"entry-links\">", f) == EOF)
+				return -1;
+			for (j = 0; j < project->link_count; j++) {
+				if (fputs("<a href=\"", f) == EOF ||
+				    html_write_escaped(f, project->links[j].url, 1) < 0 ||
+				    fputs("\" target=\"_blank\" rel=\"noreferrer noopener\">", f) == EOF ||
+				    html_write_escaped(f, project->links[j].label, 0) < 0 ||
+				    fputs(" ↗</a>", f) == EOF)
+					return -1;
+			}
+			if (project->video &&
+			    (fputs("<a href=\"", f) == EOF ||
+			     html_write_escaped(f, project->video, 1) < 0 ||
+			     fputs("\" target=\"_blank\" rel=\"noreferrer noopener\">video ↗</a>", f) == EOF))
+				return -1;
+			if (fputs("</div>\n", f) == EOF)
+				return -1;
+		}
+		if (render_project_gallery(f, project->media,
+					   project->media_count) < 0)
+			return -1;
+		if (fputs("          </div>\n        </article>\n", f) == EOF)
+			return -1;
+		shown_research++;
+	}
+
+	for (i = 0; i < profile->award_count; i++) {
+		const struct award *award = &profile->awards[i];
+
+		if (!award->show_in_website_projects)
+			continue;
+		if (fputs("        <article class=\"memory-entry project-entry award-project-entry\">\n"
+			  "          <span class=\"entry-address\">", f) == EOF ||
+		    render_address(f, 0x3000, profile->project_count +
+				   shown_research + shown_awards) < 0 ||
+		    fputs("</span>\n"
+			  "          <div class=\"entry-content\"><div class=\"entry-heading\"><h3>", f) == EOF ||
+		    html_write_escaped(f, award->title, 0) < 0 ||
+		    fputs("</h3></div>\n", f) == EOF)
+			return -1;
+		if (award->highlight_count > 0 &&
+		    (fputs("            <p>", f) == EOF ||
+		     html_write_escaped(f, award->highlights[0], 0) < 0 ||
+		     fputs("</p>\n", f) == EOF))
+			return -1;
+		if (award->issuer &&
+		    (fputs("            <p class=\"entry-technologies\">", f) == EOF ||
+		     html_write_escaped(f, award->issuer, 0) < 0 ||
+		     fputs("</p>\n", f) == EOF))
+			return -1;
+		if (award->link_count > 0) {
+			if (fputs("            <div class=\"entry-links\">", f) == EOF)
+				return -1;
+			for (j = 0; j < award->link_count; j++) {
+				if (fputs("<a href=\"", f) == EOF ||
+				    html_write_escaped(f, award->links[j].url, 1) < 0 ||
+				    fputs("\" target=\"_blank\" rel=\"noreferrer noopener\">", f) == EOF ||
+				    html_write_escaped(f, award->links[j].label, 0) < 0 ||
+				    fputs(" ↗</a>", f) == EOF)
+					return -1;
+			}
+			if (fputs("</div>\n", f) == EOF)
+				return -1;
+		}
+		if (render_project_gallery(f, award->media, award->media_count) < 0)
+			return -1;
+		if (fputs("          </div>\n        </article>\n", f) == EOF)
+			return -1;
+		shown_awards++;
 	}
 	return fputs("      </div>\n    </section>\n", f) == EOF ? -1 : 0;
 }
@@ -282,8 +425,7 @@ int static_html_render(const struct profile *profile, const char *path)
 		  "</head>\n<body>\n"
 		  "  <a class=\"skip-link\" href=\"#hero-content\">Skip to content</a>\n"
 		  "  <header class=\"site-hero\">\n"
-		  "    <nav class=\"site-nav\" aria-label=\"Primary navigation\">\n"
-		  "      <a href=\"#about\">about</a>\n", f) == EOF)
+		  "    <nav class=\"site-nav\" aria-label=\"Primary navigation\">\n", f) == EOF)
 		goto error;
 	if (fputs("      <a href=\"#notes\">notes</a>\n"
 		  "      <a href=\"#projects\">projects</a>\n", f) == EOF)
@@ -319,19 +461,7 @@ int static_html_render(const struct profile *profile, const char *path)
 		  "      </div>\n"
 		  "    </div>\n"
 		  "  </header>\n"
-		  "  <main>\n"
-		  "    <section class=\"site-section about-section\" id=\"about\" aria-labelledby=\"about-title\">\n"
-		  "      <div class=\"section-heading\">\n"
-		  "        <span class=\"section-address\">0x00001000</span>\n"
-		  "        <span class=\"section-node\" aria-hidden=\"true\">●</span>\n"
-		  "        <h2 id=\"about-title\">.about</h2>\n"
-		  "      </div>\n"
-		  "      <div class=\"about-content\">\n"
-		  "        <p class=\"about-summary\">", f) == EOF ||
-	    html_write_escaped(f, personal->summary, 0) < 0 ||
-	    fputs("</p>\n"
-		  "      </div>\n"
-		  "    </section>\n", f) == EOF ||
+		  "  <main>\n", f) == EOF ||
 	    render_notes(f, profile) < 0 ||
 	    render_projects(f, profile) < 0 ||
 	    fputs("  </main>\n"

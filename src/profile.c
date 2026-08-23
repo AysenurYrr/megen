@@ -11,6 +11,9 @@
 /* toml-c.h poisons calloc for its implementation; do not leak that internally. */
 #undef calloc
 
+static int parse_project_media(toml_table_t *table,
+			       struct project_media **result, size_t *count);
+
 static int get_string(toml_table_t *table, const char *key, char **result)
 {
 	toml_value_t value;
@@ -271,6 +274,20 @@ static void free_links(struct link *links, size_t count)
 	free(links);
 }
 
+static void free_project_media(struct project_media *media, size_t count)
+{
+	size_t i;
+
+	for (i = 0; i < count; i++) {
+		free((void *)media[i].src);
+		free((void *)media[i].caption);
+		free((void *)media[i].alt);
+		free((void *)media[i].link);
+		free((void *)media[i].poster);
+	}
+	free(media);
+}
+
 static int parse_links(toml_table_t *parent, struct link **result,
 		       size_t *count)
 {
@@ -421,6 +438,7 @@ static int parse_awards(toml_table_t *root, struct profile *profile)
 	for (i = 0; i < length; i++) {
 		struct award *award = &profile->awards[i];
 		toml_table_t *table = toml_array_table(array, i);
+		toml_value_t show_in_website_projects;
 
 		if (!table) {
 			fprintf(stderr, "megen: award entry %d must be a table\n", i + 1);
@@ -433,8 +451,14 @@ static int parse_awards(toml_table_t *root, struct profile *profile)
 		    parse_year_or_date_field(table, "date", &award->date) ||
 		    get_string_array(table, "highlights", &award->highlights,
 				     &award->highlight_count) ||
-		    parse_links(table, &award->links, &award->link_count))
+		    parse_links(table, &award->links, &award->link_count) ||
+		    parse_project_media(table, &award->media,
+					&award->media_count))
 			return -1;
+		show_in_website_projects =
+			toml_table_bool(table, "show_in_website_projects");
+		award->show_in_website_projects =
+			show_in_website_projects.ok && show_in_website_projects.u.b;
 	}
 
 	return 0;
@@ -541,6 +565,64 @@ static int parse_certificates(toml_table_t *root, struct profile *profile)
 	return 0;
 }
 
+static int parse_project_media(toml_table_t *table,
+			       struct project_media **result, size_t *count)
+{
+	toml_array_t *array = toml_table_array(table, "media");
+	int length;
+	int i;
+
+	*result = NULL;
+	*count = 0;
+	if (toml_table_array(table, "images") ||
+	    toml_table_table(table, "images") ||
+	    toml_table_unparsed(table, "images")) {
+		fprintf(stderr,
+			"megen: project images are not supported; use media entries\n");
+		return -1;
+	}
+	if (!array && (toml_table_table(table, "media") ||
+		       toml_table_unparsed(table, "media"))) {
+		fprintf(stderr, "megen: project media must be an array of tables\n");
+		return -1;
+	}
+	length = array ? toml_array_len(array) : 0;
+	if (length <= 0)
+		return 0;
+	*result = calloc((size_t)length, sizeof(**result));
+	if (!*result)
+		return -1;
+
+	for (i = 0; i < length; i++) {
+		struct project_media *media = &(*result)[i];
+		toml_table_t *media_table = toml_array_table(array, i);
+		toml_value_t selected;
+		char *type = NULL;
+
+		*count = (size_t)i + 1;
+		if (!media_table ||
+		    get_required_string(media_table, "src", &media->src) ||
+		    get_required_string(media_table, "caption", &media->caption))
+			return -1;
+		get_string(media_table, "type", &type);
+		if (!type || (strcmp(type, "image") && strcmp(type, "video"))) {
+			fprintf(stderr,
+				"megen: project media type must be 'image' or 'video'\n");
+			free((void *)type);
+			return -1;
+		}
+		media->type = !strcmp(type, "video") ?
+			PROJECT_MEDIA_VIDEO : PROJECT_MEDIA_IMAGE;
+		free((void *)type);
+		get_string(media_table, "alt", &media->alt);
+		get_string(media_table, "link", &media->link);
+		get_string(media_table, "poster", &media->poster);
+		selected = toml_table_bool(media_table, "show_on_index");
+		media->show_on_index = selected.ok && selected.u.b;
+	}
+	return 0;
+}
+
 static int parse_projects(toml_table_t *root, struct profile *profile)
 {
 	toml_array_t *array;
@@ -620,47 +702,16 @@ static int parse_projects(toml_table_t *root, struct profile *profile)
 		get_string(table, "github", &project->github);
 		get_string(table, "blog", &project->blog);
 		get_string(table, "demo", &project->demo);
+		get_string(table, "video", &project->video);
 		if (get_string_array(table, plural_schema ? "tech" : "technologies",
 				     &project->technologies,
 				     &project->technology_count) ||
 		    get_string_array(table, "highlights", &project->highlights,
 				     &project->highlight_count) ||
-		    parse_links(table, &project->links, &project->link_count))
+		    parse_links(table, &project->links, &project->link_count) ||
+		    parse_project_media(table, &project->media,
+					&project->media_count))
 			return -1;
-
-		{
-			toml_array_t *images = toml_table_array(table, "images");
-			int image_count;
-			int k;
-
-			if (!images && (toml_table_table(table, "images") ||
-				       toml_table_unparsed(table, "images"))) {
-				fprintf(stderr, "megen: project images must be an array of tables\n");
-				return -1;
-			}
-			image_count = images ? toml_array_len(images) : 0;
-			if (image_count > 0) {
-				project->images = calloc((size_t)image_count,
-							 sizeof(*project->images));
-				if (!project->images)
-					return -1;
-			}
-			for (k = 0; k < image_count; k++) {
-				struct project_image *image = &project->images[k];
-				toml_table_t *image_table = toml_array_table(images, k);
-				toml_value_t selected;
-
-				project->image_count = (size_t)k + 1;
-				if (!image_table ||
-				    get_required_string(image_table, "src", &image->src) ||
-				    get_required_string(image_table, "caption", &image->caption))
-					return -1;
-				get_string(image_table, "alt", &image->alt);
-				get_string(image_table, "link", &image->link);
-				selected = toml_table_bool(image_table, "show_on_index");
-				image->show_on_index = selected.ok && selected.u.b;
-			}
-		}
 	}
 
 	return 0;
@@ -734,6 +785,7 @@ static int parse_research_projects(toml_table_t *root, struct profile *profile)
 	for (i = 0; i < length; i++) {
 		struct research_project *project = &profile->research_projects[i];
 		toml_table_t *table = toml_array_table(array, i);
+		toml_value_t show_in_website_projects;
 
 		if (!table) {
 			fprintf(stderr, "megen: research_project entry %d must be a table\n",
@@ -751,10 +803,18 @@ static int parse_research_projects(toml_table_t *root, struct profile *profile)
 				     &project->technology_count) ||
 		    get_string_array(table, "highlights", &project->highlights,
 				     &project->highlight_count) ||
-		    parse_links(table, &project->links, &project->link_count))
+		    parse_links(table, &project->links, &project->link_count) ||
+		    parse_project_media(table, &project->media,
+					&project->media_count))
 			return -1;
 
 		get_string(table, "role", &project->role);
+		get_string(table, "video", &project->video);
+		get_string(table, "description", &project->description);
+		show_in_website_projects =
+			toml_table_bool(table, "show_in_website_projects");
+		project->show_in_website_projects =
+			show_in_website_projects.ok && show_in_website_projects.u.b;
 	}
 
 	return 0;
@@ -863,6 +923,8 @@ void profile_free(struct profile *profile)
 		free_string_array(profile->awards[i].highlights,
 				  profile->awards[i].highlight_count);
 		free_links(profile->awards[i].links, profile->awards[i].link_count);
+		free_project_media(profile->awards[i].media,
+				   profile->awards[i].media_count);
 	}
 	free(profile->awards);
 
@@ -896,13 +958,8 @@ void profile_free(struct profile *profile)
 		free((void *)project->github);
 		free((void *)project->blog);
 		free((void *)project->demo);
-		for (size_t j = 0; j < project->image_count; j++) {
-			free((void *)project->images[j].src);
-			free((void *)project->images[j].caption);
-			free((void *)project->images[j].alt);
-			free((void *)project->images[j].link);
-		}
-		free(project->images);
+		free((void *)project->video);
+		free_project_media(project->media, project->media_count);
 	}
 	free(profile->projects);
 
@@ -912,10 +969,13 @@ void profile_free(struct profile *profile)
 		free((void *)project->title);
 		free((void *)project->organization);
 		free((void *)project->role);
+		free((void *)project->video);
+		free((void *)project->description);
 		free_string_array(project->sponsors, project->sponsor_count);
 		free_string_array(project->technologies, project->technology_count);
 		free_string_array(project->highlights, project->highlight_count);
 		free_links(project->links, project->link_count);
+		free_project_media(project->media, project->media_count);
 	}
 	free(profile->research_projects);
 
