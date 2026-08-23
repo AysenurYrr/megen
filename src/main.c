@@ -30,6 +30,7 @@ static int copy_site_assets(void)
 	       static_html_remove_asset_tree("build/site/assets/notes") ||
 	       static_html_remove_asset_tree("build/site/assets/videos") ||
 	       static_html_remove_asset_tree("build/site/assets/fonts") ||
+	       static_html_copy_asset("build/cv.pdf", "build/site/cv.pdf") ||
 	       static_html_copy_asset("web/style.css", "build/site/style.css") ||
 	       static_html_copy_asset("web/gallery.js", "build/site/gallery.js") ||
 	       static_html_copy_asset_tree("web/assets/images/converted_webp",

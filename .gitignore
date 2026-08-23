@@ -1,4 +1,5 @@
 a.out
-Makefile
 megen
-build
+test_profile
+build/
+tests/

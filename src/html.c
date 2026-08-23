@@ -460,7 +460,7 @@ int static_html_render(const struct profile *profile, const char *path)
 				 "github", " ↗") < 0 ||
 	    render_external_link(f, "hero-action", personal->linkedin,
 				 "linkedin", " ↗") < 0 ||
-	    fputs("        <a class=\"hero-action\" href=\"../cv.pdf\" download>resume ↓</a>\n"
+	    fputs("        <a class=\"hero-action\" href=\"cv.pdf\" download>resume ↓</a>\n"
 		  "      </div>\n"
 		  "    </div>\n"
 		  "  </header>\n"
