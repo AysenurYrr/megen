@@ -124,19 +124,46 @@ show_in_cv = true
 label = "Credential"
 url = "https://drive.google.com/file/d/1J2l5ayrBro_s87tCKRlrJYpC8DU2To3r/view"
 
+[[note]]
+title = "System Programming Notes"
+category = "systems_programming"
+summary = "System calls, POSIX, C compilation, processes, file descriptors, memory management, synchronization, concurrency and virtual memory."
+url = "assets/notes/system_programming.pdf"
+
+[[note]]
+title = "Microprocessors & 8086 Assembly Notes"
+category = "computer_architecture"
+summary = "Digital logic, 8086 architecture, memory segmentation, addressing modes, instruction encoding, assembly programming, procedures, interrupts and macros."
+url = "assets/notes/microprocessors_8086.pdf"
+
 [[project]]
-name = "5-Stage RISC-V Processor"
+name = "5-Stage RV32I Pipeline"
 category = "low_level"
 show_in_cv = true
-summary = "Five-stage pipelined RV32I processor implemented in SystemVerilog."
-description = "In-order, single-issue RV32I core with forwarding, hazard handling, branch control, and automated verification."
-technologies = ["SystemVerilog", "RISC-V", "Verilator"]
+summary = "A simple five-stage pipelined RV32I core implemented in SystemVerilog."
+description = "In-order, single-issue pipeline with forwarding, load-use stalls, branch flushing, pipeline tracing, and Verilator-based verification."
+technologies = [
+  "SystemVerilog",
+  "RISC-V",
+  "Verilator",
+  "Konata"
+]
 highlights = [
-    "Designed a pipelined RV32I processor with forwarding, load-use stalls, branch flushing, and automated verification."
+  "Implemented and tested a simple five-stage RV32I pipeline with basic hazard handling and pipeline tracing."
 ]
 [[project.links]]
 label = "Repository"
-url = "https://github.com/AysenurYrr/riscv-rtl-experiments"
+url = "https://github.com/AysenurYrr/riscv-rtl-experiments/tree/master/pipeline"
+
+[[project.images]]
+src = "assets/images/riscv_pipeline.png"
+caption = "fig_01 // Konata pipeline trace"
+show_on_index = true
+
+[[project.images]]
+src = "assets/images/riscv_coverage.png"
+caption = "fig_02 // LCOV line coverage report"
+show_on_index = true
 
 
 [[project]]
@@ -152,7 +179,6 @@ highlights = [
 [[project.links]]
 label = "Repository"
 url = "https://github.com/AysenurYrr/megen"
-
 
 [[project]]
 name = "Emergency Drone Coordination System"

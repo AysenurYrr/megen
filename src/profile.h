@@ -101,7 +101,22 @@ enum project_category {
 	PROJECT_CATEGORY_OTHER,
 };
 
+enum project_image_ratio {
+	PROJECT_IMAGE_RATIO_DEFAULT,
+	PROJECT_IMAGE_RATIO_1X1,
+};
+
+struct project_image {
+	char *src;
+	char *caption;
+	char *alt;
+	char *link;
+	enum project_image_ratio ratio;
+	bool show_on_index;
+};
+
 struct project {
+	char *address;
 	char *name;
 	char *summary;
 	char *description;
@@ -115,7 +130,20 @@ struct project {
 
 	struct link *links;
 	size_t link_count;
+	char *github;
+	char *blog;
+	char *demo;
+
+	struct project_image *images;
+	size_t image_count;
 	bool show_in_cv;
+};
+
+struct note {
+	char *title;
+	char *category;
+	char *summary;
+	char *url;
 };
 
 struct certificate {
@@ -144,6 +172,9 @@ struct profile {
 
 	struct award *awards;
 	size_t award_count;
+
+	struct note *notes;
+	size_t note_count;
 
 	struct project *projects;
 	size_t project_count;

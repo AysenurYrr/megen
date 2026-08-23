@@ -178,6 +178,17 @@ void profile_dump(const struct profile *profile)
 		dump_links(project->links, project->link_count);
 	}
 
+	for (i = 0; i < profile->note_count; i++) {
+		const struct note *note = &profile->notes[i];
+
+		putchar('\n');
+		printf("note[%zu]:\n", i);
+		dump_string("title", note->title);
+		dump_string("category", note->category);
+		dump_string("summary", note->summary);
+		dump_string("url", note->url);
+	}
+
 	for (i = 0; i < profile->research_project_count; i++) {
 		const struct research_project *project = &profile->research_projects[i];
 

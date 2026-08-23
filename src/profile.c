@@ -544,13 +544,25 @@ static int parse_certificates(toml_table_t *root, struct profile *profile)
 static int parse_projects(toml_table_t *root, struct profile *profile)
 {
 	toml_array_t *array;
+	int plural_schema = 0;
 	int length;
 	int i;
 
 	array = toml_table_array(root, "project");
+	if (!array) {
+		array = toml_table_array(root, "projects");
+		plural_schema = array != NULL;
+	}
+	if (toml_table_array(root, "project") &&
+	    toml_table_array(root, "projects")) {
+		fprintf(stderr, "megen: use either 'project' or 'projects', not both\n");
+		return -1;
+	}
 	if (!array && (toml_table_table(root, "project") ||
-		       toml_table_unparsed(root, "project"))) {
-		fprintf(stderr, "megen: 'project' must be an array of tables\n");
+		       toml_table_unparsed(root, "project") ||
+		       toml_table_table(root, "projects") ||
+		       toml_table_unparsed(root, "projects"))) {
+		fprintf(stderr, "megen: projects must be an array of tables\n");
 		return -1;
 	}
 	if (!array)
@@ -576,30 +588,130 @@ static int parse_projects(toml_table_t *root, struct profile *profile)
 		}
 
 		profile->project_count = (size_t)i + 1;
-		if (get_required_string(table, "name", &project->name) ||
-		    get_required_string(table, "category", &category) ||
-		    parse_project_category(category, &project->category)) {
+		if (plural_schema)
+			get_string(table, "title", &project->name);
+		else
+			get_string(table, "name", &project->name);
+		if (!project->name) {
+			fprintf(stderr, "megen: missing or invalid required string '%s'\n",
+				plural_schema ? "title" : "name");
+			return -1;
+		}
+		get_string(table, "category", &category);
+		project->category = PROJECT_CATEGORY_OTHER;
+		if (category && parse_project_category(category, &project->category)) {
 			free((void *)category);
 			return -1;
 		}
 		free((void *)category);
 
 		show_in_cv = toml_table_bool(table, "show_in_cv");
-		if (!show_in_cv.ok) {
+		if (!show_in_cv.ok && !plural_schema) {
 			fprintf(stderr,
 				"megen: project entry %d requires boolean 'show_in_cv'\n",
 				i + 1);
 			return -1;
 		}
-		project->show_in_cv = show_in_cv.u.b;
+		project->show_in_cv = show_in_cv.ok && show_in_cv.u.b;
 
+		get_string(table, "address", &project->address);
 		get_string(table, "summary", &project->summary);
 		get_string(table, "description", &project->description);
-		if (get_string_array(table, "technologies", &project->technologies,
+		get_string(table, "github", &project->github);
+		get_string(table, "blog", &project->blog);
+		get_string(table, "demo", &project->demo);
+		if (get_string_array(table, plural_schema ? "tech" : "technologies",
+				     &project->technologies,
 				     &project->technology_count) ||
 		    get_string_array(table, "highlights", &project->highlights,
 				     &project->highlight_count) ||
 		    parse_links(table, &project->links, &project->link_count))
+			return -1;
+
+		{
+			toml_array_t *images = toml_table_array(table, "images");
+			int image_count;
+			int k;
+
+			if (!images && (toml_table_table(table, "images") ||
+				       toml_table_unparsed(table, "images"))) {
+				fprintf(stderr, "megen: project images must be an array of tables\n");
+				return -1;
+			}
+			image_count = images ? toml_array_len(images) : 0;
+			if (image_count > 0) {
+				project->images = calloc((size_t)image_count,
+							 sizeof(*project->images));
+				if (!project->images)
+					return -1;
+			}
+			for (k = 0; k < image_count; k++) {
+				struct project_image *image = &project->images[k];
+				toml_table_t *image_table = toml_array_table(images, k);
+				toml_value_t selected;
+				char *ratio = NULL;
+
+				project->image_count = (size_t)k + 1;
+				if (!image_table ||
+				    get_required_string(image_table, "src", &image->src) ||
+				    get_required_string(image_table, "caption", &image->caption))
+					return -1;
+				get_string(image_table, "alt", &image->alt);
+				get_string(image_table, "link", &image->link);
+				get_string(image_table, "ratio", &ratio);
+				if (ratio && !strcmp(ratio, "1x1"))
+					image->ratio = PROJECT_IMAGE_RATIO_1X1;
+				else if (ratio && strcmp(ratio, "default")) {
+					fprintf(stderr,
+						"megen: project image ratio must be 'default' or '1x1'\n");
+					free((void *)ratio);
+					return -1;
+				}
+				free((void *)ratio);
+				selected = toml_table_bool(image_table, "show_on_index");
+				image->show_on_index = selected.ok && selected.u.b;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static int parse_notes(toml_table_t *root, struct profile *profile)
+{
+	toml_array_t *array;
+	int length;
+	int i;
+
+	array = toml_table_array(root, "note");
+	if (!array && (toml_table_table(root, "note") ||
+		       toml_table_unparsed(root, "note"))) {
+		fprintf(stderr, "megen: 'note' must be an array of tables\n");
+		return -1;
+	}
+	if (!array)
+		return 0;
+
+	length = toml_array_len(array);
+	if (length <= 0)
+		return 0;
+	profile->notes = calloc((size_t)length, sizeof(*profile->notes));
+	if (!profile->notes)
+		return -1;
+
+	for (i = 0; i < length; i++) {
+		struct note *note = &profile->notes[i];
+		toml_table_t *table = toml_array_table(array, i);
+
+		if (!table) {
+			fprintf(stderr, "megen: note entry %d must be a table\n", i + 1);
+			return -1;
+		}
+		profile->note_count = (size_t)i + 1;
+		if (get_required_string(table, "title", &note->title) ||
+		    get_required_string(table, "category", &note->category) ||
+		    get_required_string(table, "summary", &note->summary) ||
+		    get_required_string(table, "url", &note->url))
 			return -1;
 	}
 
@@ -709,6 +821,7 @@ int profile_load(struct profile *profile, const char *path)
 	    parse_experiences(root, profile) ||
 	    parse_awards(root, profile) ||
 	    parse_certificates(root, profile) ||
+	    parse_notes(root, profile) ||
 	    parse_projects(root, profile) ||
 	    parse_research_projects(root, profile)) {
 		toml_free(root);
@@ -773,15 +886,34 @@ void profile_free(struct profile *profile)
 	}
 	free(profile->certificates);
 
+	for (i = 0; i < profile->note_count; i++) {
+		free((void *)profile->notes[i].title);
+		free((void *)profile->notes[i].category);
+		free((void *)profile->notes[i].summary);
+		free((void *)profile->notes[i].url);
+	}
+	free(profile->notes);
+
 	for (i = 0; i < profile->project_count; i++) {
 		struct project *project = &profile->projects[i];
 
+		free((void *)project->address);
 		free((void *)project->name);
 		free((void *)project->summary);
 		free((void *)project->description);
 		free_string_array(project->technologies, project->technology_count);
 		free_string_array(project->highlights, project->highlight_count);
 		free_links(project->links, project->link_count);
+		free((void *)project->github);
+		free((void *)project->blog);
+		free((void *)project->demo);
+		for (size_t j = 0; j < project->image_count; j++) {
+			free((void *)project->images[j].src);
+			free((void *)project->images[j].caption);
+			free((void *)project->images[j].alt);
+			free((void *)project->images[j].link);
+		}
+		free(project->images);
 	}
 	free(profile->projects);
 
