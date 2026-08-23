@@ -27,6 +27,14 @@ make run
 
 That's it. Update `profile.toml`, and your CV and website stay in sync.
 
+## Optional
+
+Cloudflare Web Analytics is optional.
+
+- Local: MEGEN_CLOUDFLARE_TOKEN=[your-token] make run
+
+- GitHub Pages: Add CLOUDFLARE_ANALYTICS_TOKEN under Secrets and Variables
+
 
 ## License
 

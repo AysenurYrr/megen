@@ -36,6 +36,8 @@ jobs:
             texlive-latex-extra
 
       - name: Build website
+        env:
+          MEGEN_CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
         run: make run
 
       - name: Configure Pages

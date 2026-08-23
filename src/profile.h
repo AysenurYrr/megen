@@ -26,6 +26,7 @@ struct project_media;
 
 struct personal_info {
 	char *name;
+	char *nickname;
 	char *title;
 	char *location;
 	char *email;

@@ -94,6 +94,7 @@ void profile_dump(const struct profile *profile)
 
 	puts("personal:");
 	dump_string("name", profile->personal.name);
+	dump_string("nickname", profile->personal.nickname);
 	dump_string("email", profile->personal.email);
 	dump_string("phone", profile->personal.phone);
 	dump_string("linkedin", profile->personal.linkedin);

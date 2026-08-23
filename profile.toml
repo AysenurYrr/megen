@@ -1,10 +1,12 @@
 [personal]
-name = "AYŞENUR YÖRÜR"
+name = "AYSENUR YORUR"
+nickname = "ayorur"
 title = "Computer Engineer — Graphics & Low-Level Systems"
 location = "Istanbul, Turkey"
 email = "aysenuryorur0@gmail.com"
 linkedin = "https://tr.linkedin.com/in/aysenur-yorur"
 github = "https://github.com/ayorur"
+website = "https://ayorur.dev/"
 summary = "I am a computer engineer with interest in low-level software development."
 skills = ["C / C++", "GPU", "Compiler Infrastructure"]
 

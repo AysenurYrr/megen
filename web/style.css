@@ -109,7 +109,7 @@ a {
 .site-hero {
   position: relative;
   display: grid;
-  min-height: 68svh;
+  min-height: 52svh;
   padding: 1.5rem clamp(1.25rem, 4vw, 4rem);
   place-items: center;
   isolation: isolate;
@@ -178,15 +178,16 @@ a {
 .hero-name {
   margin: 0;
   color: var(--ink);
-  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-size: clamp(2.4rem, 5.2vw, 4.4rem);
   font-weight: 750;
   line-height: 0.95;
   letter-spacing: -0.055em;
+  text-shadow: 0 0.18rem 1rem rgba(30, 29, 29, 0.36);
   text-wrap: balance;
 }
 
 .hero-title {
-  margin: 1.35rem 0 0;
+  margin: 0.3rem 0 0;
   color: var(--accent);
   font-size: clamp(1.15rem, 2.5vw, 1.75rem);
   font-weight: 550;
@@ -198,8 +199,8 @@ a {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.55rem 0.8rem;
-  margin: 1.5rem auto 0;
+  gap: 0.25rem 0.6rem;
+  margin: 0.35rem auto 0;
   color: #b8c3ca;
   font-family: var(--font-mono);
   font-size: clamp(0.76rem, 1.5vw, 0.9rem);
@@ -213,12 +214,12 @@ a {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: clamp(1.2rem, 4vw, 2.4rem);
-  margin-top: 2rem;
+  gap: clamp(0.75rem, 1.6vw, 1.15rem);
+  margin-top: 0.35rem;
 }
 
 .hero-action {
-  padding: 0.3rem 0;
+  padding: 0.15rem 0;
   border-bottom: 1px solid transparent;
   color: #c5d0d6;
   font-family: var(--font-mono);
@@ -244,6 +245,7 @@ main {
 }
 
 .notes-section {
+  padding-top: clamp(2rem, 4vw, 3rem);
   padding-bottom: clamp(1.25rem, 2.5vw, 2rem);
 }
 
@@ -575,15 +577,16 @@ main {
     padding-top: 5.5rem;
   }
 
+  .hero-content {
+    width: calc(100% - var(--address-width) - var(--node-width));
+    justify-self: end;
+  }
+
   .site-nav {
     top: 1.25rem;
     right: 1.25rem;
     left: 1.25rem;
     justify-content: flex-end;
-  }
-
-  .nav-github {
-    display: none;
   }
 
   .memory-rail {
@@ -647,6 +650,7 @@ main {
   }
 
   .hero-name {
+    font-size: clamp(2rem, 10vw, 2.6rem);
     letter-spacing: -0.04em;
   }
 }

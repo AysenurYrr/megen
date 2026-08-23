@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -71,6 +72,17 @@ static int render_external_link(FILE *f, const char *class_name,
 	    html_write_escaped(f, label, 0) < 0 ||
 	    (suffix && html_write_escaped(f, suffix, 0) < 0) ||
 	    fputs("</a>\n", f) == EOF)
+		return -1;
+	return 0;
+}
+
+static int render_cloudflare_analytics(FILE *f, const char *token)
+{
+	if (fputs("  <script type=\"module\" "
+		  "src=\"https://static.cloudflareinsights.com/beacon.min.js\" "
+		  "data-cf-beacon='{\"token\":\"", f) == EOF ||
+	    html_write_escaped(f, token, 1) < 0 ||
+	    fputs("\"}'></script>\n", f) == EOF)
 		return -1;
 	return 0;
 }
@@ -406,11 +418,13 @@ static int render_projects(FILE *f, const struct profile *profile)
 int static_html_render(const struct profile *profile, const char *path)
 {
 	const struct personal_info *personal;
+	const char *cloudflare_token;
 	FILE *f;
 
 	if (!profile || !path)
 		return -1;
 	personal = &profile->personal;
+	cloudflare_token = getenv("MEGEN_CLOUDFLARE_TOKEN");
 	f = fopen(path, "w");
 	if (!f)
 		return -1;
@@ -422,7 +436,7 @@ int static_html_render(const struct profile *profile, const char *path)
 		  "  <meta name=\"description\" content=\"", f) == EOF ||
 	    html_write_escaped(f, personal->summary ? personal->summary : personal->title, 1) < 0 ||
 	    fputs("\">\n  <title>", f) == EOF ||
-	    html_write_escaped(f, personal->name, 0) < 0 ||
+	    html_write_escaped(f, personal->nickname ? personal->nickname : personal->name, 0) < 0 ||
 	    fputs("</title>\n  <link rel=\"stylesheet\" href=\"style.css\">\n"
 		  "  <script src=\"gallery.js\" defer></script>\n"
 		  "</head>\n<body>\n"
@@ -471,8 +485,12 @@ int static_html_render(const struct profile *profile, const char *path)
 		  "  <dialog class=\"project-lightbox\" aria-label=\"Expanded project image\">\n"
 		  "    <button class=\"lightbox-close\" type=\"button\" aria-label=\"Close image\">×</button>\n"
 		  "    <figure><img src=\"\" alt=\"\"><figcaption></figcaption></figure>\n"
-		  "  </dialog>\n"
-		  "</body>\n</html>\n", f) == EOF)
+		  "  </dialog>\n", f) == EOF)
+		goto error;
+	if (cloudflare_token && cloudflare_token[0] != '\0' &&
+	    render_cloudflare_analytics(f, cloudflare_token) < 0)
+		goto error;
+	if (fputs("</body>\n</html>\n", f) == EOF)
 		goto error;
 
 	if (fclose(f) != 0)

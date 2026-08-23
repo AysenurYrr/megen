@@ -851,6 +851,7 @@ int profile_load(struct profile *profile, const char *path)
 	}
 
 	get_string(personal, "name", &profile->personal.name);
+	get_string(personal, "nickname", &profile->personal.nickname);
 	get_string(personal, "title", &profile->personal.title);
 	get_string(personal, "location", &profile->personal.location);
 	get_string(personal, "email", &profile->personal.email);
@@ -888,6 +889,7 @@ void profile_free(struct profile *profile)
 	size_t i;
 
 	free((void *)profile->personal.name);
+	free((void *)profile->personal.nickname);
 	free((void *)profile->personal.title);
 	free((void *)profile->personal.location);
 	free((void *)profile->personal.email);
