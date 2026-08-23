@@ -87,6 +87,29 @@ static int render_cloudflare_analytics(FILE *f, const char *token)
 	return 0;
 }
 
+static const char *get_cloudflare_token(void)
+{
+	const char *token = getenv("MEGEN_CLOUDFLARE_TOKEN");
+
+	return token && token[0] != '\0' ? token : NULL;
+}
+
+static int render_favicon_links(FILE *f)
+{
+	return fputs(
+		"  <link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" "
+		"href=\"assets/images/favicon/favicon-16.png\">\n"
+		"  <link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" "
+		"href=\"assets/images/favicon/favicon-32.png\">\n"
+		"  <link rel=\"icon\" type=\"image/png\" sizes=\"192x192\" "
+		"href=\"assets/images/favicon/favicon-192.png\">\n"
+		"  <link rel=\"icon\" type=\"image/png\" sizes=\"512x512\" "
+		"href=\"assets/images/favicon/favicon-512.png\">\n"
+		"  <link rel=\"apple-touch-icon\" "
+		"href=\"assets/images/favicon/apple-touch-icon.png\">\n",
+		f) == EOF ? -1 : 0;
+}
+
 static int render_skills(FILE *f, const struct personal_info *personal)
 {
 	size_t i;
@@ -424,7 +447,7 @@ int static_html_render(const struct profile *profile, const char *path)
 	if (!profile || !path)
 		return -1;
 	personal = &profile->personal;
-	cloudflare_token = getenv("MEGEN_CLOUDFLARE_TOKEN");
+	cloudflare_token = get_cloudflare_token();
 	f = fopen(path, "w");
 	if (!f)
 		return -1;
@@ -437,7 +460,9 @@ int static_html_render(const struct profile *profile, const char *path)
 	    html_write_escaped(f, personal->summary ? personal->summary : personal->title, 1) < 0 ||
 	    fputs("\">\n  <title>", f) == EOF ||
 	    html_write_escaped(f, personal->nickname ? personal->nickname : personal->name, 0) < 0 ||
-	    fputs("</title>\n  <link rel=\"stylesheet\" href=\"style.css\">\n"
+	    fputs("</title>\n", f) == EOF ||
+	    render_favicon_links(f) < 0 ||
+	    fputs("  <link rel=\"stylesheet\" href=\"style.css\">\n"
 		  "  <script src=\"gallery.js\" defer></script>\n"
 		  "</head>\n<body>\n"
 		  "  <a class=\"skip-link\" href=\"#hero-content\">Skip to content</a>\n"
@@ -473,9 +498,17 @@ int static_html_render(const struct profile *profile, const char *path)
 	if (render_external_link(f, "hero-action", personal->github,
 				 "github", " ↗") < 0 ||
 	    render_external_link(f, "hero-action", personal->linkedin,
-				 "linkedin", " ↗") < 0 ||
-	    fputs("        <a class=\"hero-action\" href=\"cv.pdf\" download>resume ↓</a>\n"
-		  "      </div>\n"
+				 "linkedin", " ↗") < 0)
+		goto error;
+	if (cloudflare_token) {
+		if (fputs("        <a class=\"hero-action\" href=\"resume.html\" "
+			  "target=\"_blank\" rel=\"noopener\">resume ↓</a>\n", f) == EOF)
+			goto error;
+	} else if (fputs("        <a class=\"hero-action\" href=\"cv.pdf\" "
+			 "download>resume ↓</a>\n", f) == EOF) {
+		goto error;
+	}
+	if (fputs("      </div>\n"
 		  "    </div>\n"
 		  "  </header>\n"
 		  "  <main>\n", f) == EOF ||
@@ -487,7 +520,7 @@ int static_html_render(const struct profile *profile, const char *path)
 		  "    <figure><img src=\"\" alt=\"\"><figcaption></figcaption></figure>\n"
 		  "  </dialog>\n", f) == EOF)
 		goto error;
-	if (cloudflare_token && cloudflare_token[0] != '\0' &&
+	if (cloudflare_token &&
 	    render_cloudflare_analytics(f, cloudflare_token) < 0)
 		goto error;
 	if (fputs("</body>\n</html>\n", f) == EOF)
@@ -500,6 +533,59 @@ int static_html_render(const struct profile *profile, const char *path)
 error:
 	fclose(f);
 	return -1;
+}
+
+int static_html_render_resume(const char *path)
+{
+	const char *cloudflare_token = get_cloudflare_token();
+	FILE *f;
+
+	if (!path)
+		return -1;
+	if (!cloudflare_token) {
+		if (unlink(path) && errno != ENOENT)
+			return -1;
+		return 0;
+	}
+
+	f = fopen(path, "w");
+	if (!f)
+		return -1;
+	if (fputs("<!doctype html>\n"
+		  "<html lang=\"en\">\n"
+		  "<head>\n"
+		  "  <meta charset=\"utf-8\">\n"
+		  "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+		  "  <meta name=\"robots\" content=\"noindex\">\n"
+		  "  <title>Downloading resume...</title>\n", f) == EOF ||
+	    render_favicon_links(f) < 0 ||
+	    fputs("</head>\n"
+		  "<body>\n"
+		  "  <p>\n"
+		  "    Downloading resume...\n"
+		  "    <a href=\"cv.pdf\" download=\"resume.pdf\">"
+		  "Click here if it does not start.</a>\n"
+		  "  </p>\n", f) == EOF ||
+	    render_cloudflare_analytics(f, cloudflare_token) < 0 ||
+	    fputs("  <script>\n"
+		  "    window.addEventListener(\"load\", () => {\n"
+		  "      const link = document.createElement(\"a\");\n"
+		  "      link.href = \"cv.pdf\";\n"
+		  "      link.download = \"resume.pdf\";\n"
+		  "      document.body.appendChild(link);\n"
+		  "      window.setTimeout(() => {\n"
+		  "        link.click();\n"
+		  "        link.remove();\n"
+		  "      }, 500);\n"
+		  "    });\n"
+		  "  </script>\n"
+		  "</body>\n"
+		  "</html>\n", f) == EOF) {
+		fclose(f);
+		return -1;
+	}
+
+	return fclose(f) == 0 ? 0 : -1;
 }
 
 int static_html_copy_asset(const char *source_path, const char *output_path)

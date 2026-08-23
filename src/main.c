@@ -27,6 +27,8 @@ static int copy_site_assets(void)
 {
 	return static_html_remove_asset_tree("build/site/assets/images") ||
 	       create_directory("build/site/assets/images") ||
+	       static_html_copy_asset_tree("web/assets/images/favicon",
+					   "build/site/assets/images/favicon") ||
 	       static_html_remove_asset_tree("build/site/assets/notes") ||
 	       static_html_remove_asset_tree("build/site/assets/videos") ||
 	       static_html_remove_asset_tree("build/site/assets/fonts") ||
@@ -52,6 +54,7 @@ static int generate_outputs(const struct profile *profile)
 		return -1;
 	}
 	if (static_html_render(profile, "build/site/index.html") ||
+	    static_html_render_resume("build/site/resume.html") ||
 	    copy_site_assets()) {
 		fprintf(stderr, "megen: failed to generate static site\n");
 		return -1;

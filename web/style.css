@@ -30,6 +30,7 @@
   --entry-address-width: 4.25rem;
   --node-width: 0.75rem;
   --branch-length: 1.5rem;
+  --hero-start: clamp(5.5rem, 12svh, 7rem);
   --background: #0a0f14;
   --surface: #0f161d;
   --ink: #e8edf1;
@@ -70,7 +71,7 @@ body {
 body::before {
   position: absolute;
   z-index: 0;
-  top: calc(13.6svh + 0.45rem);
+  top: calc(var(--hero-start) + 0.45rem);
   bottom: 4rem;
   left: max(
     calc(1.25rem + var(--address-width) + var(--node-width) / 2),
@@ -110,14 +111,14 @@ a {
   position: relative;
   display: grid;
   min-height: 52svh;
-  padding: 1.5rem clamp(1.25rem, 4vw, 4rem);
+  padding: var(--hero-start) clamp(1.25rem, 4vw, 4rem) 0;
   place-items: center;
   isolation: isolate;
 }
 
 .memory-rail {
   position: absolute;
-  top: 20%;
+  top: var(--hero-start);
   left: max(1.25rem, calc((100% - var(--content-width)) / 2));
   display: grid;
   grid-template-columns: var(--address-width) var(--node-width) auto;
@@ -245,7 +246,7 @@ main {
 }
 
 .notes-section {
-  padding-top: clamp(2rem, 4vw, 3rem);
+  padding-top: 0;
   padding-bottom: clamp(1.25rem, 2.5vw, 2rem);
 }
 
@@ -574,7 +575,6 @@ main {
 
   .site-hero {
     align-items: center;
-    padding-top: 5.5rem;
   }
 
   .hero-content {
@@ -590,13 +590,8 @@ main {
   }
 
   .memory-rail {
-    top: 18%;
     left: 1.25rem;
     grid-template-columns: var(--address-width) var(--node-width) auto;
-  }
-
-  body::before {
-    top: calc(12.24svh + 0.45rem);
   }
 
   .project-gallery figure {
