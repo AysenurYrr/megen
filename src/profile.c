@@ -649,7 +649,6 @@ static int parse_projects(toml_table_t *root, struct profile *profile)
 				struct project_image *image = &project->images[k];
 				toml_table_t *image_table = toml_array_table(images, k);
 				toml_value_t selected;
-				char *ratio = NULL;
 
 				project->image_count = (size_t)k + 1;
 				if (!image_table ||
@@ -658,16 +657,6 @@ static int parse_projects(toml_table_t *root, struct profile *profile)
 					return -1;
 				get_string(image_table, "alt", &image->alt);
 				get_string(image_table, "link", &image->link);
-				get_string(image_table, "ratio", &ratio);
-				if (ratio && !strcmp(ratio, "1x1"))
-					image->ratio = PROJECT_IMAGE_RATIO_1X1;
-				else if (ratio && strcmp(ratio, "default")) {
-					fprintf(stderr,
-						"megen: project image ratio must be 'default' or '1x1'\n");
-					free((void *)ratio);
-					return -1;
-				}
-				free((void *)ratio);
 				selected = toml_table_bool(image_table, "show_on_index");
 				image->show_on_index = selected.ok && selected.u.b;
 			}

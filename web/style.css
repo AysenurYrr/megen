@@ -437,8 +437,8 @@ main {
 }
 
 .project-gallery {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   width: 100%;
   max-width: var(--project-content-width);
   gap: clamp(0.7rem, 1.5vw, 1.15rem) clamp(1.25rem, 3vw, 2.5rem);
@@ -447,13 +447,11 @@ main {
 }
 
 .project-gallery figure {
-  grid-column: span 6;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   margin: 0;
-}
-
-.project-gallery figure.image-1x1 {
-  grid-column: span 4;
 }
 
 .project-gallery img {
@@ -625,9 +623,12 @@ main {
     top: calc(12.24svh + 0.45rem);
   }
 
-  .project-gallery figure,
-  .project-gallery figure.image-1x1 {
-    grid-column: 1 / -1;
+  .project-gallery figure {
+    width: 100%;
+  }
+
+  .project-gallery img {
+    width: 100%;
   }
 
   .section-heading {

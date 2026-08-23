@@ -101,17 +101,11 @@ enum project_category {
 	PROJECT_CATEGORY_OTHER,
 };
 
-enum project_image_ratio {
-	PROJECT_IMAGE_RATIO_DEFAULT,
-	PROJECT_IMAGE_RATIO_1X1,
-};
-
 struct project_image {
 	char *src;
 	char *caption;
 	char *alt;
 	char *link;
-	enum project_image_ratio ratio;
 	bool show_on_index;
 };
 

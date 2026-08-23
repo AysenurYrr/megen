@@ -221,9 +221,7 @@ static int render_projects(FILE *f, const struct profile *profile)
 				const char *alt = image->alt ? image->alt : image->caption;
 				if (!image->show_on_index)
 					continue;
-				if (fputs(image->ratio == PROJECT_IMAGE_RATIO_1X1 ?
-					  "              <figure class=\"project-image image-1x1\">\n                " :
-					  "              <figure class=\"project-image\">\n                ", f) == EOF)
+				if (fputs("              <figure class=\"project-image\">\n                ", f) == EOF)
 					return -1;
 				if (image->link) {
 					if (fputs("<a class=\"project-figure-link\" href=\"", f) == EOF ||

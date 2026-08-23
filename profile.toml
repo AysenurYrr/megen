@@ -157,13 +157,49 @@ url = "https://github.com/AysenurYrr/riscv-rtl-experiments/tree/master/pipeline"
 
 [[project.images]]
 src = "assets/images/riscv_pipeline.png"
-caption = "fig_01 // Konata pipeline trace"
+caption = "fig_02 // Konata pipeline trace"
 show_on_index = true
 
 [[project.images]]
 src = "assets/images/riscv_coverage.png"
-caption = "fig_02 // LCOV line coverage report"
+caption = "fig_03 // LCOV line coverage report"
 show_on_index = true
+
+[[project.images]]
+src = "assets/images/custom_instruction_set.png"
+caption = "fig_01 // custom_instruction_set"
+show_on_index = true
+
+
+[[project]]
+name = "Emergency Drone Coordination System"
+category = "systems"
+show_in_cv = true
+summary = "Multi-threaded emergency-response and autonomous drone coordination system implemented in C."
+description = "Concurrent coordination system with mission scheduling, networking, synchronized shared state, and real-time visualization."
+technologies = ["C", "POSIX Threads", "BSD Sockets"]
+highlights = [
+    "Implemented a multi-threaded drone coordination system using synchronization primitives and TCP socket communication."
+]
+[[project.links]]
+label = "Repository"
+url = "https://github.com/AysenurYrr/emergency-drone-coordination"
+
+[[project.images]]
+src = "assets/images/2_drone_5x7.png"
+caption = "fig_01 // two-drone coordination simulation"
+show_on_index = true
+
+[[project.images]]
+src = "assets/images/5_drone_2_7x5.png"
+caption = "fig_02 // five-drone concurrent mission execution"
+show_on_index = true
+
+[[project.images]]
+src = "assets/images/5_drone_7x5.png"
+caption = "fig_03 // five-drone concurrent mission execution"
+show_on_index = true
+
 
 
 [[project]]
@@ -179,20 +215,6 @@ highlights = [
 [[project.links]]
 label = "Repository"
 url = "https://github.com/AysenurYrr/megen"
-
-[[project]]
-name = "Emergency Drone Coordination System"
-category = "systems"
-show_in_cv = true
-summary = "Multi-threaded emergency-response and autonomous drone coordination system implemented in C."
-description = "Concurrent coordination system with mission scheduling, networking, synchronized shared state, and real-time visualization."
-technologies = ["C", "POSIX Threads", "BSD Sockets"]
-highlights = [
-    "Implemented a multi-threaded drone coordination system using synchronization primitives and TCP socket communication."
-]
-[[project.links]]
-label = "Repository"
-url = "https://github.com/AysenurYrr/emergency-drone-coordination"
 
 
 [[project]]
