@@ -61,7 +61,7 @@ url = "https://drive.google.com/file/d/1FtwzgZz_wlXY4Fdh4lXFrdEze8stdcym/view"
 
 [[award.links]]
 label = "Project"
-url = "https://fieldroboticslab.github.io/comp_RW.html##UAV2022"
+url = "https://fieldroboticslab.github.io/comp_RW.html"
 
 [[award.links]]
 label = "Video"
@@ -88,7 +88,7 @@ show_on_index = true
 [[award.media]]
 type = "image"
 src = "assets/images/uav_2023_3.jpg"
-caption = "// UAV flight electronics wiring diagram"
+caption = "// UAV flight electronics wiring diagram 2"
 show_on_index = true
 
 [[certificate]]
@@ -231,7 +231,7 @@ show_on_index = true
 [[project.media]]
 type = "image"
 src = "assets/images/5_drone_7x5.png"
-caption = "// five-drone concurrent mission execution"
+caption = "// five-drone concurrent mission execution 2"
 show_on_index = true
 
 
@@ -260,14 +260,10 @@ show_in_cv = false
 summary = "Full-stack workplace safety monitoring and operations platform."
 description = "FastAPI and React system for managing personnel, departments, factory areas, cameras, PPE violations, and pose alerts. It integrates YOLO/OpenCV-based PPE detection and employee face-embedding matching, with JWT authentication, role-restricted routes, PostgreSQL persistence, Alembic migrations, and Docker-based services."
 technologies = [
-    "Python",
     "FastAPI",
     "React",
-    "Vite",
-    "Tailwind CSS",
-    "SQLAlchemy",
     "PostgreSQL",
-    "Alembic",
+    "Python",
     "YOLO",
     "OpenCV",
     "Docker"

@@ -1,8 +1,11 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "html.h"
 #include "profile.h"
@@ -551,4 +554,40 @@ int static_html_copy_asset_tree(const char *source_path, const char *output_path
 	if (closedir(directory) != 0)
 		status = -1;
 	return status;
+}
+
+int static_html_remove_asset_tree(const char *path)
+{
+	DIR *directory;
+	struct dirent *entry;
+	struct stat info;
+	int status = 0;
+
+	if (!path)
+		return -1;
+	if (lstat(path, &info) != 0)
+		return errno == ENOENT ? 0 : -1;
+	if (!S_ISDIR(info.st_mode))
+		return unlink(path);
+
+	directory = opendir(path);
+	if (!directory)
+		return -1;
+	while ((entry = readdir(directory)) != NULL) {
+		char child[4096];
+
+		if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+			continue;
+		if (snprintf(child, sizeof(child), "%s/%s", path,
+			     entry->d_name) >= (int)sizeof(child) ||
+		    static_html_remove_asset_tree(child) != 0) {
+			status = -1;
+			break;
+		}
+	}
+	if (closedir(directory) != 0)
+		status = -1;
+	if (status != 0)
+		return -1;
+	return rmdir(path);
 }
