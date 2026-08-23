@@ -4,7 +4,7 @@ title = "Computer Engineer — Graphics & Low-Level Systems"
 location = "Istanbul, Turkey"
 email = "aysenuryorur0@gmail.com"
 linkedin = "https://tr.linkedin.com/in/aysenur-yorur"
-github = "https://github.com/AysenurYrr"
+github = "https://github.com/ayorur"
 summary = "I am a computer engineer with interest in low-level software development."
 skills = ["C / C++", "GPU", "Compiler Infrastructure"]
 
@@ -181,7 +181,7 @@ highlights = [
 ]
 [[project.links]]
 label = "Repository"
-url = "https://github.com/AysenurYrr/riscv-rtl-experiments/tree/master/pipeline"
+url = "https://github.com/ayorur/riscv-rtl-experiments/tree/master/pipeline"
 
 [[project.media]]
 type = "image"
@@ -214,7 +214,7 @@ highlights = [
 ]
 [[project.links]]
 label = "Repository"
-url = "https://github.com/AysenurYrr/emergency-drone-coordination"
+url = "https://github.com/ayorur/emergency-drone-coordination"
 
 [[project.media]]
 type = "image"
@@ -250,7 +250,7 @@ highlights = [
 ]
 [[project.links]]
 label = "Repository"
-url = "https://github.com/AysenurYrr/megen"
+url = "https://github.com/ayorur/megen"
 
 
 [[project]]
@@ -270,7 +270,7 @@ technologies = [
 ]
 [[project.links]]
 label = "Repository"
-url = "https://github.com/AysenurYrr/SafeVisor-OHS"
+url = "https://github.com/ayorur/SafeVisor-OHS"
 
 [[research_project]]
 title = "Mobile Phone-Based Victim Localization in Debris Using Multiple UAVs"

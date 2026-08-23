@@ -2,7 +2,7 @@
 
 If you don't want to prepare your CV every time, update your website separately, or worry about the design, use megen (me generator). Just fill in your information and you're ready to go.
 
-Just fill in [`profile.toml`](https://github.com/AysenurYrr/megen/blob/master/profile.toml) with your own information. Both your CV and portfolio website are generated from the same file.
+Just fill in [`profile.toml`](https://github.com/ayorur/megen/blob/master/profile.toml) with your own information. Both your CV and portfolio website are generated from the same file.
 
 You can easily choose which projects and sections appear on your CV, so you can create different versions for different job applications.
 
