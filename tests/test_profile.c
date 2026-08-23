@@ -86,6 +86,10 @@ static void test_awards_and_certificates(void)
 	assert(profile.awards[0].date.year == 2024);
 	assert(profile.awards[0].date.month == 5);
 	assert(profile.awards[0].highlight_count == 2);
+	assert(profile.awards[0].show_in_website_projects);
+	assert(profile.awards[0].media_count == 1);
+	assert(strcmp(profile.awards[0].media[0].src,
+		      "assets/images/best-paper.png") == 0);
 	assert(strcmp(profile.awards[0].highlights[0],
 		      "Recognized by the program committee.") == 0);
 	assert(profile.awards[0].link_count == 2);
@@ -192,11 +196,14 @@ static void test_remaining_sections(void)
 	assert(project->link_count == 1);
 	assert(strcmp(project->github, "https://example.com/source") == 0);
 	assert(strcmp(project->blog, "/projects/megen") == 0);
-	assert(project->image_count == 2);
-	assert(strcmp(project->images[0].caption,
+	assert(strcmp(project->video, "https://example.com/megen-video") == 0);
+	assert(project->media_count == 2);
+	assert(strcmp(project->media[0].caption,
 		      "fig_01 // generated index") == 0);
-	assert(project->images[0].show_on_index);
-	assert(!project->images[1].show_on_index);
+	assert(project->media[0].type == PROJECT_MEDIA_IMAGE);
+	assert(project->media[0].show_on_index);
+	assert(project->media[1].type == PROJECT_MEDIA_IMAGE);
+	assert(!project->media[1].show_on_index);
 	project = &profile.projects[1];
 	assert(strcmp(project->name, "Tiny Tool") == 0);
 	assert(project->description == NULL);
@@ -211,6 +218,11 @@ static void test_remaining_sections(void)
 	assert(strcmp(research->title, "Autonomous Systems Research") == 0);
 	assert(strcmp(research->organization, "Example University Lab") == 0);
 	assert(strcmp(research->role, "Research Assistant") == 0);
+	assert(strcmp(research->video,
+		      "https://example.com/research-video") == 0);
+	assert(strcmp(research->description,
+		      "Website-only research description") == 0);
+	assert(research->show_in_website_projects);
 	assert(research->sponsor_count == 2);
 	assert(strcmp(research->sponsors[0], "NVIDIA") == 0);
 	assert(research->technology_count == 2);
@@ -221,6 +233,10 @@ static void test_remaining_sections(void)
 	assert(research->highlight_count == 2);
 	assert(research->link_count == 2);
 	assert(strcmp(research->links[1].label, "Publication") == 0);
+	assert(research->media_count == 1);
+	assert(strcmp(research->media[0].src,
+		      "assets/images/research.png") == 0);
+	assert(research->media[0].show_on_index);
 
 	profile_free(&profile);
 	assert(profile.projects == NULL);
@@ -287,14 +303,27 @@ static void test_website_project_schema(void)
 	assert(strcmp(project->blog,
 		      "/projects/offline-shader-compiler") == 0);
 	assert(strcmp(project->demo, "https://example.com/compiler") == 0);
-	assert(project->image_count == 2);
-	assert(strcmp(project->images[0].alt,
+	assert(project->media_count == 2);
+	assert(strcmp(project->media[0].alt,
 		      "Compiler pipeline architecture diagram") == 0);
-	assert(strcmp(project->images[0].link,
+	assert(strcmp(project->media[0].link,
 		      "/diagrams/compiler-pipeline.svg") == 0);
-	assert(project->images[0].show_on_index);
-	assert(!project->images[1].show_on_index);
+	assert(project->media[0].show_on_index);
+	assert(project->media[1].type == PROJECT_MEDIA_VIDEO);
+	assert(strcmp(project->media[1].poster,
+		      "/images/compiler/demo-poster.png") == 0);
+	assert(!project->media[1].show_on_index);
 	profile_free(&profile);
+}
+
+static void test_legacy_project_images_are_rejected(void)
+{
+	struct profile profile;
+
+	assert(profile_load(&profile,
+			    "tests/fixtures/legacy-project-images.toml") == -1);
+	assert(profile.projects == NULL);
+	assert(profile.project_count == 0);
 }
 
 int main(void)
@@ -313,6 +342,7 @@ int main(void)
 	test_invalid_period_shape_is_rejected();
 	test_project_summary_is_optional();
 	test_website_project_schema();
+	test_legacy_project_images_are_rejected();
 	puts("profile tests passed");
 	return 0;
 }

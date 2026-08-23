@@ -6,7 +6,7 @@ email = "aysenuryorur0@gmail.com"
 linkedin = "https://tr.linkedin.com/in/aysenur-yorur"
 github = "https://github.com/AysenurYrr"
 summary = "I am a computer engineer with interest in low-level software development."
-skills = ["C / C++", "GPU Architecture", "Compiler Infrastructure"]
+skills = ["C / C++", "GPU", "Compiler Infrastructure"]
 
 [[experience]]
 company = "HAVELSAN"
@@ -69,25 +69,25 @@ url = "https://www.youtube.com/watch?v=Ik_xfePsnls"
 
 [[award.media]]
 type = "image"
-src = "assets/images/uav_2023_1.JPG"
+src = "assets/images/converted_webp/uav_2023_1.webp"
 caption = "// autonomous UAV CAD model"
 show_on_index = true
 
 [[award.media]]
 type = "image"
-src = "assets/images/uav_2023_4.jpg"
+src = "assets/images/converted_webp/uav_2023_4.webp"
 caption = "// UAV flight electronics wiring diagram"
 show_on_index = true
 
 [[award.media]]
 type = "image"
-src = "assets/images/uav_2023_2.jpg"
+src = "assets/images/converted_webp/uav_2023_2.webp"
 caption = "// target tracking and flight control architecture"
 show_on_index = true
 
 [[award.media]]
 type = "image"
-src = "assets/images/uav_2023_3.jpg"
+src = "assets/images/converted_webp/uav_2023_3.webp"
 caption = "// UAV flight electronics wiring diagram 2"
 show_on_index = true
 
@@ -185,19 +185,19 @@ url = "https://github.com/AysenurYrr/riscv-rtl-experiments/tree/master/pipeline"
 
 [[project.media]]
 type = "image"
-src = "assets/images/riscv_pipeline.png"
+src = "assets/images/converted_webp/riscv_pipeline.webp"
 caption = "// Konata pipeline trace"
 show_on_index = true
 
 [[project.media]]
 type = "image"
-src = "assets/images/riscv_coverage.png"
+src = "assets/images/converted_webp/riscv_coverage.webp"
 caption = "// LCOV line coverage report"
 show_on_index = true
 
 [[project.media]]
 type = "image"
-src = "assets/images/custom_instruction_set.png"
+src = "assets/images/converted_webp/custom_instruction_set.webp"
 caption = "// custom_instruction_set"
 show_on_index = true
 
@@ -218,19 +218,19 @@ url = "https://github.com/AysenurYrr/emergency-drone-coordination"
 
 [[project.media]]
 type = "image"
-src = "assets/images/2_drone_5x7.png"
+src = "assets/images/converted_webp/2_drone_5x7.webp"
 caption = "// two-drone coordination simulation"
 show_on_index = true
 
 [[project.media]]
 type = "image"
-src = "assets/images/5_drone_2_7x5.png"
+src = "assets/images/converted_webp/5_drone_2_7x5.webp"
 caption = "// five-drone concurrent mission execution"
 show_on_index = true
 
 [[project.media]]
 type = "image"
-src = "assets/images/5_drone_7x5.png"
+src = "assets/images/converted_webp/5_drone_7x5.webp"
 caption = "// five-drone concurrent mission execution 2"
 show_on_index = true
 
@@ -290,25 +290,25 @@ highlights = [
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/sdr_4.png"
+src = "assets/images/converted_webp/sdr_4.webp"
 caption = "// autonomous SDR scan mission flow"
 show_on_index = true
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/sdr_2.png"
+src = "assets/images/converted_webp/sdr_2.webp"
 caption = "// coordinated UAV scan path"
 show_on_index = true
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/sdr_3.png"
+src = "assets/images/converted_webp/sdr_3.webp"
 caption = "// Gazebo and Mission Planner scan simulation"
 show_on_index = true
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/sdr_6.png"
+src = "assets/images/converted_webp/sdr_6.webp"
 caption = "// multi-UAV signal triangulation geometry"
 show_on_index = true
 
@@ -321,14 +321,14 @@ show_on_index = true
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/sdr_1.png"
+src = "assets/images/converted_webp/sdr_1.webp"
 caption = "// multi-UAV signal triangulation geometry"
 show_on_index = false
 
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/sdr_5.png"
+src = "assets/images/converted_webp/sdr_5.webp"
 caption = "// UAV SDR hardware architecture"
 show_on_index = false
 
@@ -375,37 +375,37 @@ highlights = [
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/low_cost_uav_3.jpg"
+src = "assets/images/converted_webp/low_cost_uav_3.webp"
 caption = "// assembled fixed-wing UAV prototype"
 show_on_index = true
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/low_cost_uav_1.jpg"
+src = "assets/images/converted_webp/low_cost_uav_1.webp"
 caption = "// assembled fixed-wing UAV prototype"
 show_on_index = false
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/low_cost_uav_2.jpg"
+src = "assets/images/converted_webp/low_cost_uav_2.webp"
 caption = "// assembled fixed-wing UAV prototype"
 show_on_index = false
 
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/low_cost_uav_4.jpg"
+src = "assets/images/converted_webp/low_cost_uav_4.webp"
 caption = "// directional antenna assembly"
 show_on_index = true
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/low_cost_uav_5.jpeg"
+src = "assets/images/converted_webp/low_cost_uav_5.webp"
 caption = "// radio receiver and control electronics"
 show_on_index = true
 
 [[research_project.media]]
 type = "image"
-src = "assets/images/low_cost_uav_6.jpeg"
+src = "assets/images/converted_webp/low_cost_uav_6.webp"
 caption = "// RTL-SDR receiver"
 show_on_index = false

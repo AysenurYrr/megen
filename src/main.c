@@ -26,13 +26,14 @@ static int prepare_output(void)
 static int copy_site_assets(void)
 {
 	return static_html_remove_asset_tree("build/site/assets/images") ||
+	       create_directory("build/site/assets/images") ||
 	       static_html_remove_asset_tree("build/site/assets/notes") ||
 	       static_html_remove_asset_tree("build/site/assets/videos") ||
 	       static_html_remove_asset_tree("build/site/assets/fonts") ||
 	       static_html_copy_asset("web/style.css", "build/site/style.css") ||
 	       static_html_copy_asset("web/gallery.js", "build/site/gallery.js") ||
-	       static_html_copy_asset_tree("web/assets/images",
-					   "build/site/assets/images") ||
+	       static_html_copy_asset_tree("web/assets/images/converted_webp",
+					   "build/site/assets/images/converted_webp") ||
 	       static_html_copy_asset_tree("web/assets/notes",
 					   "build/site/assets/notes") ||
 	       static_html_copy_asset_tree("web/assets/videos",
